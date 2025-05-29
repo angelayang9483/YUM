@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../config';
 
+import Post from '../components/post.jsx';
+
 export default function Tab() {
   // use this temp id for now to connect to backend
   const userId = "6837782a2ed6406524a865e5";
@@ -10,13 +12,15 @@ export default function Tab() {
 
   const [username, setUsername] = useState("");
   const [favorites, setFavorites] = useState([]);
+  const [karma, setKarma] = useState(0);
 
   const getUser = async () => {
     try {
       const response = await axios.get(`${url}/api/users/${userId}`);
       setUsername(response.data.username);
       setFavorites(response.data.favorites);
-      console.log(response);
+      setKarma(response.data.karma)
+      // console.log(response);
     } catch (error) {
       console.log("Error getting user", error);
     }
@@ -28,8 +32,22 @@ export default function Tab() {
 
   return (
     <View style={styles.container}>
-      <Text>Profile Page</Text>
-      <Text>User: {username}</Text>
+      <View style={styles.section}>
+        <Text style={styles.heading}>{username}</Text>
+      </View>
+      <View style={styles.line}/>
+      <View style={styles.section}>
+        <Text style={styles.heading}>Karma: {karma}</Text>
+        <Text style={styles.content}>You are in the top 0% of users!</Text>
+      </View>
+      <View style={styles.line}/>
+      <View style={styles.section}>
+        <Text style={styles.heading}>Activity</Text>
+        <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+        <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+      </View>
+      <View style={styles.line}/>
+      <Text style={styles.heading}>Log Out</Text>
     </View>
   );
 }
@@ -37,7 +55,29 @@ export default function Tab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
+  },
+  section: {
+    alignItems: 'center',
+  },
+  post: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  heading: {
+    fontWeight: 'bold',
+    fontSize: 25,
+    color: 'rgba(0, 80, 157, 1)',
+  },
+  content: {
+    fontSize: 17,
+    color: 'rgba(0, 80, 157, 1)',
+    margin: 5,
+  },
+  line: {
+    borderBottomColor: 'black',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    width: '100%',
   },
 });

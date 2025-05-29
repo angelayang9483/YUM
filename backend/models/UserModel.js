@@ -15,6 +15,10 @@ const userSchema = new Schema({
         type: [String],
         default: []
     }, 
+    karma: {
+        type: Number,
+        default: 0
+    }
 })
 
 const User = mongoose.model("User", userSchema);
