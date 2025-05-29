@@ -8,6 +8,8 @@ import config from '../config';
 
 export default function Tab() {
   const url = config.BASE_URL;
+  const router = useRouter();
+  const { setUser } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,8 +21,12 @@ export default function Tab() {
     } else {
       try {
         const response = await axios.post(`${url}/api/users/login`, { username: username, password: password });
-        console.log("Login Success");
-        console.log(response.data);
+        console.log("Login successful");
+        console.log(response.data._id);
+        const { userId, token } = response.data
+        await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
+        setUser({ userId, token });
+        router.replace('/menus');
         return true;
       }
       catch (error) {
@@ -51,7 +57,9 @@ export default function Tab() {
         placeholder="Enter your password"
       />
 
-      <Pressable onPress={handleSubmit}><Text>Log In</Text></Pressable>
+      <Pressable onPress={async () =>  await handleSubmit()}>
+        <Text>Log In</Text>
+      </Pressable>
     </View>
   );
 }
