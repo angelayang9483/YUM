@@ -63,7 +63,6 @@ export default function Tab() {
     }
   };
 
-
   return (
     <View style={styles.container}>
       <Text>Signup Page</Text>
