@@ -15,6 +15,6 @@ router.get('/:id', userController.getUserById);
 router.delete('/:id', userController.deleteUser);
 
 // for logging in
-router.post('/login', userController.checkEmailAndPassword);
+router.post('/login', userController.checkUsernameAndPassword);
 
 module.exports = router;

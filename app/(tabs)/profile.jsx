@@ -1,14 +1,19 @@
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Line from '../components/line.jsx';
-import Post from '../components/post.jsx';
 import config from '../config';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import Post from '../components/post.jsx';
+import Line from '../components/line.jsx';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
-  // use this temp id for now to connect to backend
-  const userId = "6837782a2ed6406524a865e5";
+
   const url = config.BASE_URL;
+  const router = useRouter();
+  const { user, setUser } = useContext(AuthContext);
+  const userId = user.userId;
 
   const [username, setUsername] = useState("");
   const [favorites, setFavorites] = useState([]);
@@ -45,6 +50,17 @@ export default function Tab() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log("deleting user");
+      await SecureStore.deleteItemAsync('user');
+      setUser(null);
+      router.replace('/signup');
+    } catch (error) {
+      console.log("Error logging out: ", error);
+    }
+  };
+
   useEffect(() => {
     getUser();
   }, []);
@@ -66,7 +82,9 @@ export default function Tab() {
         <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
       </View>
       <Line/>
-      <Text style={styles.heading}>Log Out</Text>
+      <Pressable onPress={ handleLogout }>
+        <Text style={styles.heading}>Log Out</Text>
+      </Pressable>
     </View>
   );
 }

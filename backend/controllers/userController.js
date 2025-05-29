@@ -62,8 +62,8 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Check email and password for signin
-const checkEmailAndPassword = async (req, res) => {
+// Check Username and password for signin
+const checkUsernameAndPassword = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username: username });
@@ -75,9 +75,11 @@ const checkEmailAndPassword = async (req, res) => {
       if(!isMatch) {
         return res.status(401).json({ error: "Invalid username or password"});
       }
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
       res.status(200).json({
         _id: user._id,
-        email: user.email
+        // username: user.username,
+        token: token
       });
     } catch (err) {
       console.error("Password comparison error:", err);
@@ -94,5 +96,5 @@ module.exports = {
   createUser,
   getUserById,
   deleteUser,
-  checkEmailAndPassword,
+  checkUsernameAndPassword,
 };
