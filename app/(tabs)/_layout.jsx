@@ -1,4 +1,5 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faUtensils, faHeart, faComment, faUser } from '@fortawesome/free-solid-svg-icons';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
@@ -8,35 +9,35 @@ export default function TabLayout() {
         name="menus"
         options={{
           title: 'Menus',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUtensils} color={color} />,
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faHeart} color={color} />,
         }}
       />
       <Tabs.Screen
         name="trending"
         options={{
           title: 'Trending',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faComment} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUser} color={color} />,
         }}
       />
       <Tabs.Screen
         name="login"
         options={{
           title: 'Login',
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUser} color={color} />,
         }}
       />
       {/* USE THIS TO HIDE THE LOGIN TAB */}
