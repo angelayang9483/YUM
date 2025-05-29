@@ -4,6 +4,7 @@ import axios from 'axios';
 import config from '../config';
 
 import Post from '../components/post.jsx';
+import Line from '../components/line.jsx';
 
 export default function Tab() {
   // use this temp id for now to connect to backend
@@ -35,18 +36,18 @@ export default function Tab() {
       <View style={styles.section}>
         <Text style={styles.heading}>{username}</Text>
       </View>
-      <View style={styles.line}/>
+      <Line/>
       <View style={styles.section}>
         <Text style={styles.heading}>Karma: {karma}</Text>
         <Text style={styles.content}>You are in the top 0% of users!</Text>
       </View>
-      <View style={styles.line}/>
+      <Line/>
       <View style={styles.section}>
         <Text style={styles.heading}>Activity</Text>
         <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
         <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
       </View>
-      <View style={styles.line}/>
+      <Line/>
       <Text style={styles.heading}>Log Out</Text>
     </View>
   );
@@ -74,10 +75,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: 'rgba(0, 80, 157, 1)',
     margin: 5,
-  },
-  line: {
-    borderBottomColor: 'black',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    width: '100%',
   },
 });
