@@ -5,6 +5,9 @@ import { AuthContext } from '../context/AuthContext';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import config from '../config';
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// const LOGIN_KEY = 'isloggedin';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -22,8 +25,8 @@ export default function Tab() {
       try {
         const response = await axios.post(`${url}/api/users/login`, { username: username, password: password });
         console.log("Login successful");
-        console.log(response.data._id);
-        const { userId, token } = response.data
+        console.log(response.data);
+        const { _id: userId, token } = response.data;
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
         setUser({ userId, token });
         router.replace('/menus');

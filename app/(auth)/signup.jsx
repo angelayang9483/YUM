@@ -9,8 +9,8 @@ import config from '../config';
 export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
-
   const { setUser } = useContext(AuthContext);
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -27,7 +27,8 @@ export default function Tab() {
         console.log("Sending user to backend:", user);
         const response = await axios.post(`${url}/api/users/`, user);
         console.log(response.data);
-        const { userId, token } = response.data;
+        // const { userId, token } = response.data;
+        const { _id: userId, token } = response.data;
 
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
         setUser({ userId, token });
