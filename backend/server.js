@@ -10,6 +10,11 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'YUM API is running. Use /api/users to access the API endpoints.' });
+});
+
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 

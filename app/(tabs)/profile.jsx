@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
-import config from '../config';
-
-import Post from '../components/post.jsx';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import Line from '../components/line.jsx';
+import Post from '../components/post.jsx';
+import config from '../config';
 
 export default function Tab() {
   // use this temp id for now to connect to backend
@@ -14,16 +13,35 @@ export default function Tab() {
   const [username, setUsername] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [karma, setKarma] = useState(0);
+  const [karmaPercentile, setKarmaPercentile] = useState(0);
 
   const getUser = async () => {
     try {
+      console.log('Attempting to fetch user data from:', `${url}/api/users/${userId}`);
       const response = await axios.get(`${url}/api/users/${userId}`);
+      console.log('User data response:', response.data);
+      const userKarma = response.data.karma;
       setUsername(response.data.username);
       setFavorites(response.data.favorites);
-      setKarma(response.data.karma)
+      setKarma(userKarma);
+
+      console.log('Fetching all users for karma calculation');
+      const allusers = await axios.get(`${url}/api/users/`);
+      console.log('All users response:', allusers.data);
+      const users = allusers.data;
+      const karmaArray = users.map(user => user.karma);
+      const usersHigherThan = karmaArray.filter(k => k > userKarma).length;
+      const userPercentile = (usersHigherThan / karmaArray.length) * 100;
+      setKarmaPercentile(Math.round(userPercentile));
+
       // console.log(response);
     } catch (error) {
-      console.log("Error getting user", error);
+      console.error("Error getting user:", error.message);
+      console.error("Full error:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
     }
   };
 
@@ -39,7 +57,7 @@ export default function Tab() {
       <Line/>
       <View style={styles.section}>
         <Text style={styles.heading}>Karma: {karma}</Text>
-        <Text style={styles.content}>You are in the top 0% of users!</Text>
+        <Text style={styles.content}>You are in the top {karmaPercentile}% of users!</Text>
       </View>
       <Line/>
       <View style={styles.section}>
