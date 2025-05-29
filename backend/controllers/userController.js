@@ -1,4 +1,5 @@
 const User = require('../models/UserModel');
+const jwt = require('jsonwebtoken');
 
 // Get all users
 const getAllUsers = async (req, res) => {
@@ -12,14 +13,30 @@ const getAllUsers = async (req, res) => {
 
 // Create a user
 const createUser = async (req, res) => {
-  const { username, password, favorites } = req.body;
   try {
-    const newUser = new User({ username, password, favorites });
-    await newUser.save();
-    res.status(201).json(newUser);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
+    const user = await User.create(req.body)
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+    res.status(200).json({userId: user._id, token})
+    } catch (error) {
+        console.log("Error creating user:", error)
+
+        if (error.name === 'ValidationError') {
+          const errors = {};
+          for (let field in error.errors) {
+            errors[field] = error.errors[field].message;
+          }
+          return res.status(400).json({
+            success: false,
+            message: 'Validation error',
+            errors: errors
+          });
+        }
+
+        res.status(400).json({
+          success: false, 
+          message: error.message
+        })
+    }
 };
 
 // Get one user
@@ -45,9 +62,37 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Check email and password for signin
+const checkEmailAndPassword = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid username or password"});
+    }
+    try {
+      const isMatch = await user.checkPassword(password);
+      if(!isMatch) {
+        return res.status(401).json({ error: "Invalid username or password"});
+      }
+      res.status(200).json({
+        _id: user._id,
+        email: user.email
+      });
+    } catch (err) {
+      console.error("Password comparison error:", err);
+      res.status(500).json({ error: "Server error occurred" });
+    }
+  } catch(error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
 module.exports = {
   getAllUsers,
   createUser,
   getUserById,
   deleteUser,
+  checkEmailAndPassword,
 };

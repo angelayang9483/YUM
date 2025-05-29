@@ -20,7 +20,7 @@ export default function Tab() {
       const response = await axios.get(`${url}/api/users/${userId}`);
       setUsername(response.data.username);
       setFavorites(response.data.favorites);
-      setKarma(response.data.karma)
+      setKarma(response.data.karma);
       // console.log(response);
     } catch (error) {
       console.log("Error getting user", error);
