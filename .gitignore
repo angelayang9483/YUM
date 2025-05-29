@@ -38,5 +38,5 @@ yarn-error.*
 
 app-example
 
-.env
+# .env
 app/config.js
