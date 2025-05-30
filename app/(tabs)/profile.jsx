@@ -61,9 +61,11 @@ export default function Tab() {
     }
   };
 
-  useEffect(() => {
-    getUser();
-  }, []);
+useEffect(() => {
+  console.log("no user");
+  if (!user || !user.userId) return;
+  getUser();
+}, [user]);
 
   return (
     <View style={styles.container}>
