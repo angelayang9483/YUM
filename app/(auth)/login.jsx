@@ -22,8 +22,8 @@ export default function Tab() {
       try {
         const response = await axios.post(`${url}/api/users/login`, { username: username, password: password });
         console.log("Login successful");
-        console.log(response.data);
-        const { _id: userId, token } = response.data;
+        console.log("Login response:", response.data);
+        const { userId, token } = response.data;
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
         setUser({ userId, token });
         router.replace('/menus');
@@ -31,7 +31,9 @@ export default function Tab() {
       }
       catch (error) {
         console.log("error", error);
-        console.log(error.response.data);
+        console.log(error.response?.data);
+        Alert.alert("Login Error", error.response?.data?.error || "An error occurred while logging in");
+        return false;
       }
     }
   }

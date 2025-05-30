@@ -1,19 +1,19 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import config from '../config';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import Post from '../components/post.jsx';
 import Line from '../components/line.jsx';
+import Post from '../components/post.jsx';
+import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
-
   const url = config.BASE_URL;
   const router = useRouter();
   const { user, setUser } = useContext(AuthContext);
-  const userId = user.userId;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [username, setUsername] = useState("");
   const [favorites, setFavorites] = useState([]);
@@ -22,8 +22,13 @@ export default function Tab() {
 
   const getUser = async () => {
     try {
-      console.log('Attempting to fetch user data from:', `${url}/api/users/${userId}`);
-      const response = await axios.get(`${url}/api/users/${userId}`);
+      console.log('Current user object:', user);
+      if (!user || !user.userId) {
+        throw new Error('User not properly authenticated');
+      }
+
+      console.log('Attempting to fetch user data from:', `${url}/api/users/${user.userId}`);
+      const response = await axios.get(`${url}/api/users/${user.userId}`);
       console.log('User data response:', response.data);
       const userKarma = response.data.karma;
       setUsername(response.data.username);
@@ -38,15 +43,19 @@ export default function Tab() {
       const usersHigherThan = karmaArray.filter(k => k > userKarma).length;
       const userPercentile = (usersHigherThan / karmaArray.length) * 100;
       setKarmaPercentile(Math.round(userPercentile));
-
-      // console.log(response);
     } catch (error) {
       console.error("Error getting user:", error.message);
-      console.error("Full error:", error);
       if (error.response) {
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
       }
+      setError(error.message);
+      // If there's an authentication error, redirect to signup
+      if (!user || !user.userId) {
+        router.replace('/signup');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,7 +72,26 @@ export default function Tab() {
 
   useEffect(() => {
     getUser();
-  }, []);
+  }, [user]); // Add user as a dependency to re-fetch when user changes
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="rgba(0, 80, 157, 1)" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <Pressable onPress={handleLogout} style={styles.button}>
+          <Text style={styles.buttonText}>Return to Login</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -78,8 +106,23 @@ export default function Tab() {
       <Line/>
       <View style={styles.section}>
         <Text style={styles.heading}>Activity</Text>
-        <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
-        <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={true}
+          bounces={true}
+          alwaysBounceVertical={true}
+        >
+          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
+          <Post restaurant="De Neve" review="The pizza was amazing and fresh!" />
+          <Post restaurant="Rende West" review="Great breakfast options available." />
+          <Post restaurant="Epicuria" review="Love the variety of food choices here." />
+          <Post restaurant="Feast" review="The salad bar has so many options!" />
+        </ScrollView>
       </View>
       <Line/>
       <Pressable onPress={ handleLogout }>
@@ -94,6 +137,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-evenly',
     alignItems: 'center',
+  },
+  centered: {
+    justifyContent: 'center',
   },
   section: {
     alignItems: 'center',
@@ -112,4 +158,26 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 1)',
     margin: 5,
   },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: 'rgba(0, 80, 157, 1)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  scrollView: {
+    width: '100%',
+    maxHeight: 200,
+  },
+  scrollContent: {
+    alignItems: 'center',
+    paddingVertical: 50,
+  }
 });
