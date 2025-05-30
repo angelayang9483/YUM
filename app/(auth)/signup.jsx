@@ -27,7 +27,7 @@ export default function Tab() {
         console.log("Sending user to backend:", user);
         const response = await axios.post(`${url}/api/users/`, user);
         console.log(response.data);
-        const { _id: userId, token } = response.data;
+        const { userId, token } = response.data;
 
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
         setUser({ userId, token });
