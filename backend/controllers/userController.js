@@ -77,7 +77,7 @@ const checkUsernameAndPassword = async (req, res) => {
       }
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
       res.status(200).json({
-        _id: user._id,
+        userId: user._id,
         // username: user.username,
         token: token
       });
