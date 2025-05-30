@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import Line from '../components/line.jsx';
-import Post from '../components/post.jsx';
+import Comment from '../components/comment.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
@@ -19,6 +19,7 @@ export default function Tab() {
   const [favorites, setFavorites] = useState([]);
   const [karma, setKarma] = useState(0);
   const [karmaPercentile, setKarmaPercentile] = useState(0);
+  const [likedComments, setLikedComments] = useState([]);
 
   const getUser = async () => {
     try {
@@ -43,6 +44,12 @@ export default function Tab() {
       const usersHigherThan = karmaArray.filter(k => k > userKarma).length;
       const userPercentile = (usersHigherThan / karmaArray.length) * 100;
       setKarmaPercentile(Math.round(userPercentile));
+
+      // Fetch liked comments
+      console.log('Fetching liked comments');
+      const likedCommentsResponse = await axios.get(`${url}/api/users/${user.userId}/liked-comments`);
+      console.log('Liked comments response:', likedCommentsResponse.data);
+      setLikedComments(likedCommentsResponse.data.likedComments || []);
     } catch (error) {
       console.error("Error getting user:", error.message);
       if (error.response) {
@@ -67,6 +74,24 @@ export default function Tab() {
       router.replace('/signup');
     } catch (error) {
       console.log("Error logging out: ", error);
+    }
+  };
+
+  const handleLikeUpdate = (commentId, isLiked, newLikeCount) => {
+    // Update the local liked comments when a comment is liked/unliked
+    setLikedComments(prevComments => 
+      prevComments.map(comment => 
+        comment._id === commentId 
+          ? { ...comment, likes: newLikeCount }
+          : comment
+      )
+    );
+
+    // If comment was unliked, remove it from the list
+    if (!isLiked) {
+      setLikedComments(prevComments => 
+        prevComments.filter(comment => comment._id !== commentId)
+      );
     }
   };
 
@@ -116,14 +141,17 @@ export default function Tab() {
           bounces={true}
           alwaysBounceVertical={true}
         >
-          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
-          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
-          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
-          <Post restaurant="Bruin Plate" review="The chipotle chicken bowl was super good!" />
-          <Post restaurant="De Neve" review="The pizza was amazing and fresh!" />
-          <Post restaurant="Rende West" review="Great breakfast options available." />
-          <Post restaurant="Epicuria" review="Love the variety of food choices here." />
-          <Post restaurant="Feast" review="The salad bar has so many options!" />
+          {likedComments.length > 0 ? (
+            likedComments.map((comment) => (
+              <Comment 
+                key={comment._id} 
+                comment={comment} 
+                onLikeUpdate={handleLikeUpdate}
+              />
+            ))
+          ) : (
+            <Text style={styles.noCommentsText}>No comments yet!</Text>
+          )}
         </ScrollView>
       </View>
       <Line/>
@@ -181,5 +209,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: 'center',
     paddingVertical: 50,
+  },
+  noCommentsText: {
+    color: 'rgba(0, 80, 157, 1)',
+    fontSize: 16,
+    margin: 20,
   }
 });
