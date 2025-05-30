@@ -31,7 +31,9 @@ export default function Tab() {
       }
       catch (error) {
         console.log("error", error);
-        console.log(error.response.data);
+        console.log(error.response?.data);
+        Alert.alert("Login Error", error.response?.data?.error || "An error occurred while logging in");
+        return false;
       }
     }
   }
