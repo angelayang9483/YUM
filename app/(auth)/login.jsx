@@ -9,7 +9,7 @@ import config from '../config';
 export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
-  const { setUser } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ export default function Tab() {
       try {
         const response = await axios.post(`${url}/api/users/login`, { username: username, password: password });
         console.log("Login successful");
-        console.log("Login response:", response.data);
+        console.log(response.data);
         const { userId, token } = response.data;
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
         setUser({ userId, token });

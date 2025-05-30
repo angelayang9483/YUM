@@ -96,8 +96,10 @@ export default function Tab() {
   };
 
   useEffect(() => {
+    console.log("no user");
+    if (!user || !user.userId) return;
     getUser();
-  }, [user]); // Add user as a dependency to re-fetch when user changes
+  }, [user]);
 
   if (isLoading) {
     return (
