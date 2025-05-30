@@ -27,7 +27,6 @@ export default function Tab() {
         console.log("Sending user to backend:", user);
         const response = await axios.post(`${url}/api/users/`, user);
         console.log(response.data);
-        // const { userId, token } = response.data;
         const { _id: userId, token } = response.data;
 
         await SecureStore.setItemAsync('user', JSON.stringify({ userId, token }));
@@ -66,29 +65,33 @@ export default function Tab() {
 
   return (
     <View style={styles.container}>
-      <Text>Signup Page</Text>
+      <Text style={styles.heading}>YUM</Text>
 
-      <Text>Username</Text>
+      <Text style={styles.boldText}>Create an account</Text>
+
       <TextInput
         style={styles.input}
         value={username}
         onChangeText={(text) => setUsername(text)}
-        placeholder="Enter your username"
+        placeholder="Create a username"
       />
 
-      <Text>Password</Text>
       <TextInput
         style={styles.input}
         value={password}
         secureTextEntry
         onChangeText={(text) => setPassword(text)}
-        placeholder="Enter your password"
+        placeholder="Create a password"
       />
 
-      <Pressable onPress={handleSubmit}><Text>Sign Up</Text></Pressable>
+      <Pressable onPress={handleSubmit} style={styles.button}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </Pressable>
 
-      <Text>Have an account?</Text>
-      <Pressable onPress={() => router.navigate('/login')}><Text>Sign In</Text></Pressable>
+      <Text style={styles.text}>Have an account?</Text>
+      <Pressable onPress={() => router.navigate('/login')}>
+        <Text style={styles.signIn}>Sign In</Text>
+      </Pressable>
     </View>
   );
 }
@@ -98,5 +101,45 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  heading: {
+    fontWeight: 'bold',
+    fontSize: 40,
+    color: 'rgba(0, 80, 157, 1)',
+  },
+  input: {
+    fontSize: 17,
+    margin: 5,
+    width: '80%',
+    height: 40,
+    borderRadius: 10,
+    borderColor: 'grey',
+    borderWidth: .5,
+    padding: 5,
+  },
+  boldText: {
+    fontSize: 20,
+    margin: 20,
+    fontWeight: 'bold',
+  },
+  button: {
+    width: '80%',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 80, 157, 1)',
+    height: 40,
+    borderRadius: 10,
+    margin: 20,
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 15,
+  },
+  text: {
+    fontSize: 15,
+    paddingTop: 10,
+  },
+  signIn: {
+    color: 'rgba(0, 80, 157, 1)',
   },
 });

@@ -41,9 +41,10 @@ export default function Tab() {
 
   return (
     <View style={styles.container}>
-      <Text>Login Page</Text>
+      <Text style={styles.heading}>YUM</Text>
 
-      <Text>Username</Text>
+      <Text style={styles.boldText}>Welcome Back!</Text>
+
       <TextInput
         style={styles.input}
         value={username}
@@ -51,7 +52,6 @@ export default function Tab() {
         placeholder="Enter your username"
       />
 
-      <Text>Password</Text>
       <TextInput
         style={styles.input}
         value={password}
@@ -60,8 +60,13 @@ export default function Tab() {
         placeholder="Enter your password"
       />
 
-      <Pressable onPress={async () =>  await handleSubmit()}>
-        <Text>Log In</Text>
+      <Pressable onPress={async () =>  await handleSubmit()} style={styles.button}>
+        <Text style={styles.buttonText}>Log In</Text>
+      </Pressable>
+
+      <Text style={styles.text}>Don't have an account yet?</Text>
+      <Pressable onPress={() => router.navigate('/signup')}>
+        <Text style={styles.signIn}>Create Account</Text>
       </Pressable>
     </View>
   );
@@ -72,5 +77,45 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  heading: {
+    fontWeight: 'bold',
+    fontSize: 40,
+    color: 'rgba(0, 80, 157, 1)',
+  },
+  input: {
+    fontSize: 17,
+    margin: 5,
+    width: '80%',
+    height: 40,
+    borderRadius: 10,
+    borderColor: 'grey',
+    borderWidth: .5,
+    padding: 5,
+  },
+  boldText: {
+    fontSize: 20,
+    margin: 20,
+    fontWeight: 'bold',
+  },
+  button: {
+    width: '80%',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 80, 157, 1)',
+    height: 40,
+    borderRadius: 10,
+    margin: 20,
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 15,
+  },
+  text: {
+    fontSize: 15,
+    paddingTop: 10,
+  },
+  signIn: {
+    color: 'rgba(0, 80, 157, 1)',
   },
 });
