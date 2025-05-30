@@ -5,9 +5,6 @@ import { AuthContext } from '../context/AuthContext';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import config from '../config';
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// const LOGIN_KEY = 'isloggedin';
 
 export default function Tab() {
   const url = config.BASE_URL;

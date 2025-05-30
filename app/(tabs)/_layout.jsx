@@ -17,7 +17,7 @@ export default function TabLayout() {
   if (!user) return null;
 
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: 'rgba(0, 80, 157, 1)' }}>
       <Tabs.Screen
         name="menus"
         options={{
