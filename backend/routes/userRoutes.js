@@ -17,4 +17,10 @@ router.delete('/:id', userController.deleteUser);
 // for logging in
 router.post('/login', userController.checkUsernameAndPassword);
 
+//like a comment
+router.post('/:userId/like-comment', userController.likeComment);
+
+//get comments that have been liked by a user
+router.get('/:userId/liked-comments', userController.getLikedComments);
+
 module.exports = router;

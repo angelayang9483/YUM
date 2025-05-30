@@ -20,7 +20,11 @@ const userSchema = new Schema({
     karma: {
         type: Number,
         default: 0
-    }
+    },
+    likedComments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
+    }]
 })
 
 userSchema.pre('save', function (next) {
@@ -45,6 +49,7 @@ userSchema.methods.checkPassword = function(candidatePassword) {
         });
     });
 };
+
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;
