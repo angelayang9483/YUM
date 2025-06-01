@@ -1,6 +1,6 @@
+import { faComment, faHeart, faUser, faUtensils } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faUtensils, faHeart, faComment, faUser } from '@fortawesome/free-solid-svg-icons';
-import { useRouter, Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -23,6 +23,7 @@ export default function TabLayout() {
         options={{
           title: 'Menus',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUtensils} color={color} />,
+          headerShown: false
         }}
       />
       <Tabs.Screen
@@ -30,6 +31,7 @@ export default function TabLayout() {
         options={{
           title: 'Favorites',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faHeart} color={color} />,
+          headerShown: false
         }}
       />
       <Tabs.Screen
@@ -37,6 +39,7 @@ export default function TabLayout() {
         options={{
           title: 'Trending',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faComment} color={color} />,
+          headerShown: false
         }}
       />
       <Tabs.Screen
