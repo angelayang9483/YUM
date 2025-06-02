@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema
 
-const foodItemSchema = new Schema({
+const mealSchema = new Schema({
     name: {
         type: String,
         required: true
@@ -30,5 +30,5 @@ const foodItemSchema = new Schema({
 });
 
 
-const FoodItem = mongoose.model("FoodItem", foodItemSchema);
-module.exports = FoodItem;
+const Meal = mongoose.model("meal", mealSchema);
+module.exports = Meal;
