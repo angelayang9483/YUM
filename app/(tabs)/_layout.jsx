@@ -17,7 +17,18 @@ export default function TabLayout() {
   if (!user) return null;
 
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'rgba(0, 80, 157, 1)' }}>
+    <Tabs screenOptions={{ 
+      tabBarStyle: {
+        backgroundColor: '#00509d',
+        borderTopWidth: 0, 
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -1 },
+        shadowOpacity: 0.2, 
+        shadowRadius: 3,
+      }, 
+      tabBarActiveTintColor: '#FFFFFF', 
+      tabBarInactiveTintColor: '#CCCCCC'  
+      }}>
       <Tabs.Screen
         name="menus"
         options={{

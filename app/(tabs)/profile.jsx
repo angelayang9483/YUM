@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import Line from '../components/line.jsx';
+import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Comment from '../components/comment.jsx';
+import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
