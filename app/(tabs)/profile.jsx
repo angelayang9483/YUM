@@ -19,6 +19,7 @@ export default function Tab() {
   const [favorites, setFavorites] = useState([]);
   const [karma, setKarma] = useState(0);
   const [karmaPercentile, setKarmaPercentile] = useState(0);
+  const [comments, setComments] = useState([]);
   const [likedComments, setLikedComments] = useState([]);
 
   const getUser = async () => {
@@ -45,11 +46,19 @@ export default function Tab() {
       const userPercentile = (usersHigherThan / karmaArray.length) * 100;
       setKarmaPercentile(Math.round(userPercentile));
 
+      // Fetch comments
+      console.log('Fetching comments');
+      const commentsResponse = await axios.get(`${url}/api/users/${user.userId}/comments`);
+      console.log('Comments response:', commentsResponse.data);
+      setComments(commentsResponse.data.comments || []);
+
       // Fetch liked comments
       console.log('Fetching liked comments');
       const likedCommentsResponse = await axios.get(`${url}/api/users/${user.userId}/liked-comments`);
-      console.log('Liked comments response:', likedCommentsResponse.data);
+      console.log('liked comments response:', likedCommentsResponse.data);
       setLikedComments(likedCommentsResponse.data.likedComments || []);
+
+
     } catch (error) {
       console.error("Error getting user:", error.message);
       if (error.response) {
@@ -77,23 +86,35 @@ export default function Tab() {
     }
   };
 
-  const handleLikeUpdate = (commentId, isLiked, newLikeCount) => {
-    // Update the local liked comments when a comment is liked/unliked
-    setLikedComments(prevComments => 
-      prevComments.map(comment => 
-        comment._id === commentId 
-          ? { ...comment, likes: newLikeCount }
-          : comment
-      )
-    );
-
-    // If comment was unliked, remove it from the list
-    if (!isLiked) {
-      setLikedComments(prevComments => 
-        prevComments.filter(comment => comment._id !== commentId)
+const handleLikeUpdate = (commentId, isLiked, newLikeCount) => {
+  if (isLiked) {
+    // add to likedComments or update existing like count
+    const existing = likedComments.find(comment => comment._id === commentId);
+    if (existing) {
+      setLikedComments(prev =>
+        prev.map(comment =>
+          comment._id === commentId
+            ? { ...comment, likes: newLikeCount }
+            : comment
+        )
       );
+    } else {
+      // add to liked comments if it isn't liked
+      const newComment = comments.find(comment => comment._id === commentId);
+      if (newComment) {
+        setLikedComments(prev => [
+          ...prev,
+          { ...newComment, likes: newLikeCount }
+        ]);
+      }
     }
-  };
+  } else {
+    // remove from liked comments if unliked
+    setLikedComments(prev =>
+      prev.filter(comment => comment._id !== commentId)
+    );
+  }
+};
 
   useEffect(() => {
     console.log("no user");
@@ -132,7 +153,31 @@ export default function Tab() {
       </View>
       <Line/>
       <View style={styles.section}>
-        <Text style={styles.heading}>Activity</Text>
+        <Text style={styles.heading}>Your Comments</Text>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={true}
+          bounces={true}
+          alwaysBounceVertical={true}
+        >
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <Comment 
+                key={comment._id} 
+                comment={comment} 
+                onLikeUpdate={handleLikeUpdate}
+              />
+            ))
+          ) : (
+            <Text style={styles.noCommentsText}>No comments yet!</Text>
+          )}
+        </ScrollView>
+      </View>
+      <Line/>
+      <View style={styles.section}>
+        <Text style={styles.heading}>Your Liked Comments</Text>
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -153,6 +198,7 @@ export default function Tab() {
             <Text style={styles.noCommentsText}>No comments yet!</Text>
           )}
         </ScrollView>
+      
       </View>
       <Line/>
       <Pressable onPress={ handleLogout }>
@@ -180,7 +226,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontWeight: 'bold',
-    fontSize: 25,
+    fontSize: 20,
     color: 'rgba(0, 80, 157, 1)',
   },
   content: {
@@ -205,10 +251,16 @@ const styles = StyleSheet.create({
   scrollView: {
     width: '100%',
     maxHeight: 200,
+    // height: 0,
+    // height: '50%',
+
+    borderColor: 'grey',
+    borderWidth: 1,
+    borderRadius: 20,
   },
   scrollContent: {
     alignItems: 'center',
-    paddingVertical: 50,
+    // paddingVertical: 50,
   },
   noCommentsText: {
     color: 'rgba(0, 80, 157, 1)',

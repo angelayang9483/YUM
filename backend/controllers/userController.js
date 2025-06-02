@@ -163,6 +163,31 @@ const getLikedComments = async (req, res) => {
   }
 }
 
+const getComments = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user and populate their liked comments with full comment data
+    const user = await User.findById(userId).populate('comments');
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return the populated liked comments
+    res.status(200).json({
+      success: true,
+      comments: user.comments,
+      count: user.comments.length
+    });
+
+  } catch (error) {
+    console.error("Error getting comments:", error);
+    res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
+
 module.exports = {
   getAllUsers,
   createUser,
@@ -170,5 +195,6 @@ module.exports = {
   deleteUser,
   checkUsernameAndPassword,
   likeComment,
-  getLikedComments
+  getLikedComments,
+  getComments
 };
