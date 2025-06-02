@@ -2,11 +2,46 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Line from '../components/line.jsx';
 
 export default function Tab() {
+  const url = config.BASE_URL;
+  const router = useRouter();
+  const { user, setUser } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [favorites, setFavorites] = useState([]);
+
+  const getUser = async () => {
+    try {
+      console.log('Current user object:', user);
+      if (!user || !user.userId) {
+        throw new Error('User not properly authenticated');
+      }
+
+      console.log('Attempting to fetch user data from:', `${url}/api/users/${user.userId}`);
+      const response = await axios.get(`${url}/api/users/${user.userId}`);
+      console.log('User data response:', response.data);
+      setFavorites(response.data.favorites);
+    } catch (error) {
+      console.error("Error getting user:", error.message);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+      setError(error.message);
+      // If there's an authentication error, redirect to signup
+      if (!user || !user.userId) {
+        router.replace('/signup');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.padding}></Text>
-        <Text style={styles.title}>Trending</Text>
+        <Text style={styles.title}>Popular</Text>
       </View>
 
       <Line/>

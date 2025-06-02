@@ -15,8 +15,9 @@ class WebScrapeController {
    */
   static async scrapeAllMenus() {
     try {
+      console.log("SCRAPING ALL MENUS");
       // UCLA dining website URL
-      const url = 'https://menu.dining.ucla.edu/Menus';
+      const url = 'https://dining.ucla.edu/dining-locations/';
       
       // Make HTTP request to the UCLA dining website
       const response = await axios.get(url);
@@ -26,12 +27,13 @@ class WebScrapeController {
       const allDiningHalls = {};
       
       // Find all dining halls
-      $('.menu-head').each((i, element) => {
+      $('a.ucla-main-nav__link').each((i, element) => {
         const diningHallName = $(element).text().trim();
         allDiningHalls[diningHallName] = {
           name: diningHallName,
           meals: {}
         };
+        console.log("ALL DINING HALLS: ", allDiningHalls);
       });
       
       // Process each dining hall section
@@ -146,6 +148,7 @@ class WebScrapeController {
    */
   static async updateMenuDatabase() {
     try {
+      console.log("UPDATING MENU DATABASE");
       const allMenus = await this.scrapeAllMenus();
       const today = new Date();
       

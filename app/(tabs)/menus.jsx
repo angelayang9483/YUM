@@ -1,7 +1,37 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
+import config from '../config';
+import { AuthContext } from '../context/AuthContext';
+
+ 
 
 export default function Tab() {
+  const url = config.BASE_URL;
+  const router = useRouter();
+  const [diningHalls, setDiningHalls] = useState([]);
+
+  const getDiningHalls = async () => {
+    console.log("Attempting to scrape the info");
+    const response1 = await axios.post(`${url}/api/scrapeMenus`);
+    console.log("scraping info response:", response1.data);
+    
+    console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
+    const response = await axios.get(`${url}/api/dininghalls`);
+    console.log('Dining hall data response:', response.data);
+    setDiningHalls(response.data);
+  }
+
+  useEffect(() => {
+    getDiningHalls();
+  }, []);  // Run once on mount
+  
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>

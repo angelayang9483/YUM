@@ -18,6 +18,12 @@ app.get('/', (req, res) => {
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
+const scrapeMenusRoutes = require('./routes/scrapeMenusRoutes');
+app.use('/api/scrapeMenus', scrapeMenusRoutes);
+
+const diningHallRoutes = require('./routes/diningHallRoutes');
+app.use('/api/dininghalls', diningHallRoutes);
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => {

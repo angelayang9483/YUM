@@ -46,9 +46,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="trending"
+        name="popular"
         options={{
-          title: 'Trending',
+          title: 'Popular',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faComment} color={color} />,
           headerShown: false
         }}
