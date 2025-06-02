@@ -251,16 +251,9 @@ const styles = StyleSheet.create({
   scrollView: {
     width: '100%',
     maxHeight: 200,
-    // height: 0,
-    // height: '50%',
-
-    borderColor: 'grey',
-    borderWidth: 1,
-    borderRadius: 20,
   },
   scrollContent: {
     alignItems: 'center',
-    // paddingVertical: 50,
   },
   noCommentsText: {
     color: 'rgba(0, 80, 157, 1)',
