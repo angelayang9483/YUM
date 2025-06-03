@@ -19,10 +19,6 @@ const mealSchema = new Schema({
         type: [String],
         default: []
     },
-    imageUrl: {
-        type: String,
-        default: ""
-    },
     favoritesCount: {
         type: Number,
         default: 0

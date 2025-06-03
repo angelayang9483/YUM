@@ -2,7 +2,31 @@ const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema
 
+const stationSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    meals: [{
+        type: Schema.Types.ObjectId,
+        ref: "Meal",
+        required: true
+    }]
+});
+
+const mealPeriodSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    stations: [stationSchema]
+});
+
 const menuSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
     date: {
         type: Date,
         required: true
@@ -17,24 +41,12 @@ const menuSchema = new Schema({
         ref: "FoodTruck",
         default: null
     },
-    items: {
-        type: [
-            {
-                foodItemId: {
-                    type: Schema.Types.ObjectId,
-                    ref: "FoodItem",
-                    required: true
-                },
-                station: {
-                    type: String,
-                    default: ""
-                }
-            }
-        ],
-        default: []
+    mealPeriods: {
+        type: Map,
+        of: mealPeriodSchema,
+        default: new Map()
     }
 });
-
 
 const Menu = mongoose.model("Menu", menuSchema);
 module.exports = Menu;
