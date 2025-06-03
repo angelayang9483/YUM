@@ -5,10 +5,10 @@ import { FontAwesome } from '@expo/vector-icons';
 const Meal = (props) => {
     const [isLiked, setLiked] = useState(props.isLiked);
     const [likes, setLikes] = useState(props.likes);
+    const [favorites, setFavorites] = useState([]);
+    const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
 
-    const handleLike = async () => {
-        // if (!user || !comment) return;
-        
+    const handleLike = async () => {   
         try {
         // send to database 
 
@@ -22,16 +22,16 @@ const Meal = (props) => {
     return (
         <View style={styles.cardContainer}>
             <View style={styles.textContainer}>
-                <Text style={styles.item}>Chipotle Chicken Bowl</Text>
-                <Text style={styles.diningHall}>Bruin Plate</Text>
+                <Text style={styles.item}>{props.name}</Text>
+                <Text style={styles.diningHall}>{props.diningHall}</Text>
             </View>
-            {/* <Pressable onPress={handleLikePress} style={styles.heartContainer}>
+            <Pressable onPress={handleLike} style={styles.heartContainer}>
                 <FontAwesome 
                 name={isLiked ? "heart" : "heart-o"} 
                 size={20} 
                 color="white" 
                 />
-            </Pressable> */}
+            </Pressable>
         </View>
     );
 };
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
       borderRadius: 10,
       marginTop: 10,
       paddingHorizontal: 15,
-      height: 70,
+      height: 75,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center'
@@ -57,14 +57,21 @@ const styles = StyleSheet.create({
     },
     textContainer: {
       flexDirection: 'column',
+      width: '80%'
     },
     item: {
       color: 'white',
-      fontSize: 20,
+      fontSize: 16,
       fontWeight: '700',
     },
     diningHall: {
       color: 'white',
       paddingTop: 2,
+    },
+    heartContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 0,
+        minWidth: 30,
     }
   });
