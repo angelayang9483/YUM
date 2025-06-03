@@ -8,6 +8,7 @@ import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import DiningHall from '../components/diningHall.jsx'
 
  
 
@@ -45,6 +46,7 @@ export default function Tab() {
         <Text style={styles.heading}>Open Now</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Dining Halls</Text>
+          <DiningHall name='Bruin Plate' time='3:00pm' isLiked={true}/>
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
