@@ -17,6 +17,7 @@ export default function Tab() {
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
   const [time, setTime] = useState('');
   const [mealPeriod, setMealPeriod] = useState('none');
+  const [loading, setLoading] = useState(true);
 
   const mealPeriodDict = {
     'Breakfast': 0,
@@ -50,10 +51,6 @@ export default function Tab() {
   }
 
   const getDiningHalls = async () => {
-    // console.log("Attempting to scrape the info");
-    const response1 = await axios.post(`${url}/api/scrapeMenus`);
-    // console.log("scraping info response:", response1.data);
-    
     // console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
     const response = await axios.get(`${url}/api/dininghalls`);
     console.log('Dining hall data response:', response.data);
@@ -173,6 +170,37 @@ export default function Tab() {
     setOpenDiningHalls(open);
     setClosedDiningHalls(closed);
   }, [diningHalls, mealPeriod]);
+
+  useEffect(() => {
+    const checkScraping = async () => {
+      let scraping = true;
+      while (scraping) {
+        try {
+          const response = await axios.get(`${url}/scrape-status`);
+          console.log(response.data);
+          scraping = response.data.isScraping;
+          if (!scraping) setLoading(false);
+        } catch (err) {
+          console.error('Error checking scraping status:', err);
+          // Optional: fallback to hide loader after timeout
+          setLoading(false);
+          break;
+        }
+        await new Promise(res => setTimeout(res, 1000));
+      }
+    };
+
+    checkScraping();
+  }, []);
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>Loading menu...</Text>
+      </View>
+    );
+  }
+
 
   return (
     <ScrollView style={styles.container}>
