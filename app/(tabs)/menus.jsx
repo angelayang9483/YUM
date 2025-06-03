@@ -16,6 +16,8 @@ export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
   const [diningHalls, setDiningHalls] = useState([]);
+  const [time, setTime] = useState('');
+  const [mealPeriod, setMealPeriod] = useState('none');
 
   const getDiningHalls = async () => {
     console.log("Attempting to scrape the info");
@@ -31,6 +33,40 @@ export default function Tab() {
   useEffect(() => {
     getDiningHalls();
   }, []);  // Run once on mount
+
+  useEffect(() => {
+    const updateTimeAndMealPeriod = () => {
+      const now = new Date();
+      const hours = now.getHours();
+
+      const timeString = now.toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+      setTime(timeString);
+
+      console.log(`Current hours: ${hours}`);
+      let currentPeriod = '';
+      if (hours >= 7 && hours < 10)
+        currentPeriod = 'breakfast';
+      else if (hours >= 11 && hours < 16)
+        currentPeriod = 'lunch';
+      else if (hours >= 17 && hours < 21)
+        currentPeriod = 'dinner';
+      else if (hours >= 21 && hours < 24)
+        currentPeriod = 'extendedDinner'  // need to sync w backend
+
+      setMealPeriod(currentPeriod);
+    };
+
+    updateTimeAndMealPeriod(); // run once at mount
+    console.log(time);
+    console.log(mealPeriod)
+
+    const interval = setInterval(updateTimeAndMealPeriod, 30 * 60 * 1000); // every 30 mins
+
+    return () => clearInterval(interval);
+  }, []);
   
 
   return (
