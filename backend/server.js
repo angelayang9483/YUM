@@ -15,6 +15,12 @@ app.get('/', (req, res) => {
   res.json({ message: 'YUM API is running. Use /api/users to access the API endpoints.' });
 });
 
+let isScraping = true;
+
+app.get('/scrape-status', (req, res) => {
+  res.json({ isScraping });
+});
+
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
@@ -41,13 +47,16 @@ mongoose.connect(process.env.MONGODB_URI)
   // Automatically scrape menus when server starts
   console.log('Starting automatic menu scraping...');
   try {
+    isScraping = true;
     await WebScrapeController.updateMenuDatabase();
     console.log('Starting food truck scraping...');
     await WebScrapeController.scrapeFoodTrucks();
   } catch (error) {
     console.error('Error during initial scraping:', error);
+  } finally {
+    isScraping = false;
   }
-  
+
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
 .catch((err) => console.error(err));
