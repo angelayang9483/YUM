@@ -26,6 +26,10 @@ const mealSchema = new Schema({
     hereToday: {
         type: Boolean,
         default: false
+    },
+    diningHall: {
+        type: String,
+        default: ""
     }
 });
 
