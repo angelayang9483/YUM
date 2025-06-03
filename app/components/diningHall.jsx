@@ -3,22 +3,8 @@ import { ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
 import Menu from './menu.jsx';
 
 const DiningHall = (props) => {
-    const [isLiked, setLiked] = useState(props.isLiked);
     const [menuVisible, setMenuVisible] = useState(false);
     const [selectedDiningHall, setSelectedDiningHall] = useState('');
-
-    const handleLike = async () => {
-        // if (!user || !comment) return;
-        
-        try {
-        // send to database 
-
-        setLiked(!isLiked);
-
-        } catch (error) {
-          console.error('Error liking dining hall:', error);
-        }
-    };
 
     const handleDiningHallPress = (name) => {
         setSelectedDiningHall(name);
