@@ -24,40 +24,25 @@ export default function Tab() {
 
   const getUser = async () => {
     try {
-      console.log('Current user object:', user);
-      if (!user || !user.userId) {
-        throw new Error('User not properly authenticated');
-      }
+      if (!user || !user.userId) throw new Error('User not properly authenticated');
 
-      console.log('Attempting to fetch user data from:', `${url}/api/users/${user.userId}`);
       const response = await axios.get(`${url}/api/users/${user.userId}`);
-      console.log('User data response:', response.data);
       const userKarma = response.data.karma;
       setUsername(response.data.username);
       setFavorites(response.data.favorites);
       setKarma(userKarma);
 
-      console.log('Fetching all users for karma calculation');
       const allusers = await axios.get(`${url}/api/users/`);
-      console.log('All users response:', allusers.data);
-      const users = allusers.data;
-      const karmaArray = users.map(user => user.karma);
+      const karmaArray = allusers.data.map(user => user.karma);
       const usersHigherThan = karmaArray.filter(k => k > userKarma).length;
       const userPercentile = (usersHigherThan / karmaArray.length) * 100;
       setKarmaPercentile(Math.round(userPercentile));
 
-      // Fetch comments
-      console.log('Fetching comments');
       const commentsResponse = await axios.get(`${url}/api/users/${user.userId}/comments`);
-      console.log('Comments response:', commentsResponse.data);
       setComments(commentsResponse.data.comments || []);
 
-      // Fetch liked comments
-      console.log('Fetching liked comments');
       const likedCommentsResponse = await axios.get(`${url}/api/users/${user.userId}/liked-comments`);
-      console.log('liked comments response:', likedCommentsResponse.data);
       setLikedComments(likedCommentsResponse.data.likedComments || []);
-
 
     } catch (error) {
       console.error("Error getting user:", error.message);
@@ -66,10 +51,7 @@ export default function Tab() {
         console.error("Response status:", error.response.status);
       }
       setError(error.message);
-      // If there's an authentication error, redirect to signup
-      if (!user || !user.userId) {
-        router.replace('/signup');
-      }
+      if (!user || !user.userId) router.replace('/signup');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +59,6 @@ export default function Tab() {
 
   const handleLogout = async () => {
     try {
-      console.log("deleting user");
       await SecureStore.deleteItemAsync('user');
       setUser(null);
       router.replace('/signup');
@@ -86,30 +67,47 @@ export default function Tab() {
     }
   };
 
-  const handleLikeUpdate = (commentId, newlyLiked, newLikeCount) => {
-    const alreadyLiked = likedComments.find(comment => comment._id === commentId);
+  const handleLike = async (commentId) => {
+    if (!user) return;
 
-    // add to liked comments
-    if (newlyLiked && !alreadyLiked) {
-      const comment = comments.find(comment => comment._id === commentId);
-      if (comment) {
-        setLikedComments(prev => [
-          ...prev,
-          { ...comment, likes: newLikeCount }
-        ]);
+    // Optimistic update
+    setComments(prev =>
+      prev.map(comment =>
+        comment._id === commentId
+          ? {
+              ...comment,
+              likes: likedComments.find(c => c._id === commentId) ? comment.likes - 1 : comment.likes + 1,
+            }
+          : comment
+      )
+    );
+
+    // Update likedComments list
+    setLikedComments(prev => {
+      const alreadyLiked = prev.find(c => c._id === commentId);
+      if (alreadyLiked) {
+        return prev.filter(c => c._id !== commentId);
+      } else {
+        const comment = comments.find(c => c._id === commentId);
+        return comment ? [...prev, comment] : prev;
       }
-    // remove from liked comments
-    } else if (!newlyLiked && alreadyLiked) {
-      setLikedComments(prev =>
-        prev.filter(comment => comment._id !== commentId)
-      );
+    });
+
+    // Backend sync
+    try {
+      await axios.post(`${url}/api/comments/${commentId}/like`, {
+        userId: user.userId
+      });
+
+      // Optional: re-fetch user data for full consistency
+      getUser();
+    } catch (error) {
+      console.error("Failed to update like on server:", error);
     }
   };
 
   useEffect(() => {
-    console.log("no user");
-    if (!user || !user.userId) return;
-    getUser();
+    if (user && user.userId) getUser();
   }, [user]);
 
   if (isLoading) {
@@ -136,28 +134,22 @@ export default function Tab() {
       <View style={styles.section}>
         <Text style={styles.heading}>{username}</Text>
       </View>
-      <Line/>
+      <Line />
       <View style={styles.section}>
         <Text style={styles.heading}>Karma: {karma}</Text>
         <Text style={styles.content}>You are in the top {karmaPercentile}% of users!</Text>
       </View>
-      <Line/>
+      <Line />
       <View style={styles.section}>
         <Text style={styles.heading}>Your Comments</Text>
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          scrollEnabled={true}
-          bounces={true}
-          alwaysBounceVertical={true}
-        >
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {comments.length > 0 ? (
             comments.map((comment) => (
               <Comment 
                 key={comment._id} 
                 comment={comment} 
-                onLikeUpdate={handleLikeUpdate}
+                onLike={handleLike}
+                liked={likedComments.some(c => c._id === comment._id)}
               />
             ))
           ) : (
@@ -165,38 +157,32 @@ export default function Tab() {
           )}
         </ScrollView>
       </View>
-      <Line/>
+      <Line />
       <View style={styles.section}>
         <Text style={styles.heading}>Your Liked Comments</Text>
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          scrollEnabled={true}
-          bounces={true}
-          alwaysBounceVertical={true}
-        >
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {likedComments.length > 0 ? (
             likedComments.map((comment) => (
               <Comment 
                 key={comment._id} 
                 comment={comment} 
-                onLikeUpdate={handleLikeUpdate}
+                onLike={handleLike}
+                liked={true}
               />
             ))
           ) : (
             <Text style={styles.noCommentsText}>No comments yet!</Text>
           )}
         </ScrollView>
-      
       </View>
-      <Line/>
-      <Pressable onPress={ handleLogout }>
+      <Line />
+      <Pressable onPress={handleLogout}>
         <Text style={styles.heading}>Log Out</Text>
       </Pressable>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
