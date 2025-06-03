@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const MenuModel = require('../models/MenuModel');
 const DiningHallModel = require('../models/DiningHallModel');
 const MealModel = require('../models/MealModel');
+const FoodTruckModel = require('../models/FoodTruckModel')
 
 /**
  * WebScrapeController - Handles scraping UCLA dining hall menu data
@@ -257,7 +258,8 @@ class WebScrapeController {
                     $setOnInsert: {
                       name: meal.name,
                       dietaryTags: [],
-                      favoritesCount: 0
+                      favoritesCount: 0,
+                      diningHall: cleanDiningHallName
                     }
                   },
                   { upsert: true, new: true }
@@ -335,6 +337,177 @@ class WebScrapeController {
       throw error;
     } finally {
       WebScrapeController.isScrapingInProgress = false;
+    }
+  }
+  
+  /**
+   * Scrape UCLA food truck schedule
+   * @returns {Promise<Object>} Object containing food truck data by location
+   */
+  static async scrapeFoodTrucks() {
+    try {
+      const url = "https://dining.ucla.edu/meal-swipe-exchange/";
+      console.log('Scraping food truck schedule from:', url);
+      
+      const response = await axios.get(url);
+      const $ = cheerio.load(response.data);
+      
+      const locations = ['Sproul', 'Rieber'];
+      const timeSlots = [
+        '5:00 p.m. – 8:30 p.m.',
+        '9 p.m. – 12 a.m.'
+      ];
+      
+      const foodTrucksSet = new Set(); // For case-insensitive duplicate detection
+      const locationData = {};
+      
+      locations.forEach(location => {
+        console.log(`Looking for ${location} section...`);
+        
+        // Find the h3 tag containing the location name
+        const locationHeader = $('h3').filter((i, el) => {
+          return $(el).text().trim().toLowerCase().includes(location.toLowerCase());
+        });
+        
+        if (locationHeader.length === 0) {
+          console.log(`No ${location} section found`);
+          return;
+        }
+        
+        // Find the table that comes after this h3
+        const table = locationHeader.next('figure').find('table');
+        if (table.length === 0) {
+          console.log(`No table found after ${location} header`);
+          return;
+        }
+        
+        console.log(`Found table for ${location}`);
+        locationData[location] = [];
+        
+        // Process each row in the table body
+        table.find('tbody tr').each((rowIndex, row) => {
+          const cells = $(row).find('td');
+          const dateCell = $(cells[0]).text().trim();
+          
+          if (!dateCell) return; // Skip empty rows
+          
+          // Process the two time slot cells
+          for (let timeSlotIndex = 0; timeSlotIndex < 2; timeSlotIndex++) {
+            const cellIndex = timeSlotIndex + 1; // Skip date column
+            const cell = $(cells[cellIndex]);
+            const timeSlot = timeSlots[timeSlotIndex];
+            
+            if (!cell.length) continue;
+            
+            // Extract food truck names from the cell
+            const cellHtml = cell.html() || '';
+            const cellText = cell.text().trim();
+            
+            // Skip empty cells
+            if (!cellText) continue;
+            
+            let truckNames = [];
+            
+            if (cellHtml.includes('<br>')) {
+              // Multiple trucks separated by <br>
+              const parts = cellHtml.split('<br>');
+              parts.forEach(part => {
+                const truckName = $('<div>').html(part).text().trim();
+                if (truckName) {
+                  truckNames.push(truckName);
+                }
+              });
+            } else {
+              // Single truck
+              if (cellText) {
+                truckNames.push(cellText);
+              }
+            }
+            
+            // Add each truck to our data with case-insensitive duplicate detection
+            truckNames.forEach(truckName => {
+              const lowerCaseName = truckName.toLowerCase();
+              if (truckName && !foodTrucksSet.has(lowerCaseName)) {
+                foodTrucksSet.add(lowerCaseName);
+                
+                locationData[location].push({
+                  name: truckName, // Keep original capitalization
+                  location: location,
+                  timeSlot: timeSlot,
+                  date: dateCell
+                });
+              }
+            });
+          }
+        });
+      });
+      
+      // Save to database
+      console.log('Saving food trucks to database...');
+      const allFoodTruckUpdates = [];
+      
+      Object.keys(locationData).forEach(location => {
+        locationData[location].forEach(truckData => {
+          // Parse the time slot to match schema format
+          let hoursArray = [];
+          if (truckData.timeSlot) {
+            const timeSlot = truckData.timeSlot;
+            let label = "";
+            let open = "";
+            let close = "";
+            
+            if (timeSlot.includes('5:00 p.m.')) {
+              label = "Evening";
+              open = "5:00 p.m.";
+              close = "8:30 p.m.";
+            } else if (timeSlot.includes('9 p.m.')) {
+              label = "Late Night";
+              open = "9:00 p.m.";
+              close = "12:00 a.m.";
+            }
+            
+            hoursArray = [{
+              label: label,
+              open: open,
+              close: close
+            }];
+          }
+          
+          allFoodTruckUpdates.push(
+            FoodTruckModel.findOneAndUpdate(
+              { name: truckData.name }, // Use exact name for matching
+              {
+                $set: {
+                  name: truckData.name,
+                  dailyLocation: truckData.location,
+                  hours: hoursArray
+                }
+              },
+              { upsert: true, new: true }
+            )
+          );
+        });
+      });
+      
+      // Execute all food truck updates in parallel
+      const savedTrucks = await Promise.all(allFoodTruckUpdates);
+      
+      // Convert to final format
+      const result = {
+        locations: locationData,
+        uniqueTrucks: Array.from(foodTrucksSet),
+        totalTrucks: foodTrucksSet.size,
+        savedToDatabase: savedTrucks.length,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      console.log(`Scraped ${result.totalTrucks} unique food trucks, saved ${result.savedToDatabase} to database`);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error scraping food truck schedule:', error);
+      throw error;
     }
   }
 }
