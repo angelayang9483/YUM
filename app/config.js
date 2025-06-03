@@ -1,4 +1,4 @@
 const config = {
-  BASE_URL: 'https://16ee-2607-f010-2a7-103f-d0c5-a7cd-8ba7-b450.ngrok-free.app'
+  BASE_URL: 'https://3cf8-2607-f010-2a7-1030-2d7c-84a5-e98b-8582.ngrok-free.app'
 }
 export default config
