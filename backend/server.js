@@ -24,10 +24,23 @@ app.use('/api/scrapeMenus', scrapeMenusRoutes);
 const diningHallRoutes = require('./routes/diningHallRoutes');
 app.use('/api/dininghalls', diningHallRoutes);
 
+// Import WebScrapeController
+const WebScrapeController = require('./controllers/WebScrapeController');
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => {
+.then(async () => {
   console.log('MongoDB connected');
+  
+  // Automatically scrape menus when server starts
+  console.log('🚀 Starting automatic menu scraping...');
+  try {
+    await WebScrapeController.updateMenuDatabase();
+    console.log('✅ Initial menu scraping completed successfully');
+  } catch (error) {
+    console.error('❌ Error during initial menu scraping:', error);
+  }
+  
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
 .catch((err) => console.error(err));
