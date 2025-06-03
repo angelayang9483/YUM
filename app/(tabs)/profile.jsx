@@ -86,35 +86,25 @@ export default function Tab() {
     }
   };
 
-const handleLikeUpdate = (commentId, isLiked, newLikeCount) => {
-  if (isLiked) {
-    // add to likedComments or update existing like count
-    const existing = likedComments.find(comment => comment._id === commentId);
-    if (existing) {
-      setLikedComments(prev =>
-        prev.map(comment =>
-          comment._id === commentId
-            ? { ...comment, likes: newLikeCount }
-            : comment
-        )
-      );
-    } else {
-      // add to liked comments if it isn't liked
-      const newComment = comments.find(comment => comment._id === commentId);
-      if (newComment) {
+  const handleLikeUpdate = (commentId, newlyLiked, newLikeCount) => {
+    const alreadyLiked = likedComments.find(comment => comment._id === commentId);
+
+    // add to liked comments
+    if (newlyLiked && !alreadyLiked) {
+      const comment = comments.find(comment => comment._id === commentId);
+      if (comment) {
         setLikedComments(prev => [
           ...prev,
-          { ...newComment, likes: newLikeCount }
+          { ...comment, likes: newLikeCount }
         ]);
       }
+    // remove from liked comments
+    } else if (!newlyLiked && alreadyLiked) {
+      setLikedComments(prev =>
+        prev.filter(comment => comment._id !== commentId)
+      );
     }
-  } else {
-    // remove from liked comments if unliked
-    setLikedComments(prev =>
-      prev.filter(comment => comment._id !== commentId)
-    );
-  }
-};
+  };
 
   useEffect(() => {
     console.log("no user");
