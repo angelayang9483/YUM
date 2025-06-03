@@ -14,10 +14,7 @@ class WebScrapeController {
    * @returns {Promise<Object>} Object containing all dining hall menus
    */
   static async scrapeAllMenus() {
-    console.log('🕷️ scrapeAllMenus() method started');
     try {
-      console.log("SCRAPING ALL MENUS");
-      
       const allDiningHalls = {
         "Bruin Plate": "https://dining.ucla.edu/bruin-plate/",
         "De Neve Dining": "https://dining.ucla.edu/de-neve-dining/",
@@ -139,7 +136,6 @@ class WebScrapeController {
         }, 0);
       }, 0);
       
-      console.log(`🎉 Scraping complete! Found ${totalMenuItems} total menu items across ${totalDiningHalls} dining halls`);
       
       return results;
     } catch (error) {
@@ -284,12 +280,8 @@ class WebScrapeController {
    * @returns {Promise<void>}
    */
   static async updateMenuDatabase() {
-    console.log('🔄 updateMenuDatabase() method started');
     try {
-      console.log("UPDATING MENU DATABASE");
-      console.log('🌐 About to call scrapeAllMenus()...');
       const allMenus = await this.scrapeAllMenus();
-      console.log('📊 scrapeAllMenus() returned data:', Object.keys(allMenus).length, 'dining halls');
       const today = new Date();
       
       // For each dining hall, update or create the database entry
@@ -312,8 +304,6 @@ class WebScrapeController {
           },
           { upsert: true, new: true }
         );
-        
-        console.log(`🏢 Dining Hall: "${cleanDiningHallName}" -> ID: ${diningHall._id}`);
         
         // Create meal periods object to organize all meal periods in one menu
         const mealPeriods = {};
@@ -364,8 +354,6 @@ class WebScrapeController {
           };
         }
         
-        console.log(`📋 Creating menu for "${cleanDiningHallName}" with dining hall ID: ${diningHall._id}`);
-        
         // Create or update ONE menu per dining hall with all meal periods
         const menu = await MenuModel.findOneAndUpdate(
           {
@@ -380,8 +368,6 @@ class WebScrapeController {
           },
           { upsert: true, new: true }
         );
-        
-        console.log(`✅ Menu created/updated with ID: ${menu._id} for "${cleanDiningHallName}"`);
       }
       
       console.log('Menu database updated successfully');
@@ -430,9 +416,8 @@ class WebScrapeController {
           
           // Merge the detailed information into the item
           item.nutritionInfo = details.nutritionInfo;
-          console.log(`✓ Enriched: ${item.name}`);
         } catch (error) {
-          console.error(`✗ Failed to enrich ${item.name}:`, error.message);
+          // Continue processing other items
         }
       }));
       
