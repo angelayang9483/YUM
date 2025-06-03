@@ -58,8 +58,6 @@ export default function Tab() {
     const fetchData = async () => {
       try {
         await getFavorites();
-        await fetchFavoriteMeals();
-        console.log('favs:', favoriteMeals);
       } catch (err) {
         console.error(err);
         setError(err);
@@ -70,6 +68,12 @@ export default function Tab() {
   
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (favorites.length > 0) {
+      fetchFavoriteMeals();
+    }
+  }, [favorites]);
 
   return (
     <ScrollView style={styles.container}>
@@ -84,13 +88,12 @@ export default function Tab() {
         <Text style={styles.heading}>Available Now</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Meals</Text>
-          <Meal />
           {
           favoriteMeals.map(meal => (
             <Meal
               key={meal._id}
               name={meal.name}
-              // diningHall={meal.}
+              diningHall={meal.diningHall}
               isLiked={true}
             />
           ))
@@ -146,12 +149,5 @@ const styles = StyleSheet.create({
   },
   padding: {
     paddingTop: 15
-  },
-  placeholderDiningHall: {
-    backgroundColor: '#467FB6',
-    width: '100%',
-    height: 60,
-    borderRadius: 10,
-    marginTop: 10
   }
 });
