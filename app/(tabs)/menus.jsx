@@ -1,16 +1,14 @@
-
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Comment from '../components/comment.jsx';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import DiningHall from '../components/diningHall.jsx';
 import Line from '../components/line.jsx';
+import config from '../config';
+ine from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import DiningHall from '../components/diningHall.jsx'
-
- 
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -20,14 +18,14 @@ export default function Tab() {
   const [mealPeriod, setMealPeriod] = useState('none');
 
   const getDiningHalls = async () => {
-    console.log("Attempting to scrape the info");
-    const response1 = await axios.post(`${url}/api/scrapeMenus`);
-    console.log("scraping info response:", response1.data);
-    
-    console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
-    const response = await axios.get(`${url}/api/dininghalls`);
-    console.log('Dining hall data response:', response.data);
-    setDiningHalls(response.data);
+    try {
+      console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
+      const response = await axios.get(`${url}/api/dininghalls`);
+      console.log('Dining hall data response:', response.data);
+      setDiningHalls(response.data);
+    } catch (error) {
+      console.error('Error fetching dining halls:', error);
+    }
   }
 
   useEffect(() => {

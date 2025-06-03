@@ -9,6 +9,9 @@ const MealModel = require('../models/MealModel');
  */
 class WebScrapeController {
   
+  // Simple lock to prevent concurrent scraping
+  static isScrapingInProgress = false;
+  
   /**
    * Scrape all UCLA dining hall menus
    * @returns {Promise<Object>} Object containing all dining hall menus
@@ -44,8 +47,63 @@ class WebScrapeController {
           results[diningHallName] = {
             name: diningHallName,
             url: url,
-            meals: {}
+            meals: {},
+            hours: []
           };
+          
+          // Scrape dining hours
+          const hoursContainer = $('.dining-hours-container');
+          if (hoursContainer.length > 0) {
+            hoursContainer.find('.dining-hours-item').each((index, item) => {
+              const $item = $(item);
+              const mealName = $item.find('.meal-name').text().trim();
+              const mealTimeElement = $item.find('.meal-time');
+              
+              let mealTime = '';
+              let isOpen = true;
+              
+              // Check if there's a "closed-text" span indicating the meal period is closed
+              const closedText = mealTimeElement.find('.closed-text');
+              if (closedText.length > 0) {
+                mealTime = closedText.text().trim();
+                isOpen = false;
+              } else {
+                mealTime = mealTimeElement.text().trim();
+                isOpen = true;
+              }
+              
+              if (mealName && mealTime) {
+                const hourInfo = {
+                  label: mealName,
+                  time: mealTime,
+                  isOpen: isOpen
+                };
+                
+                // If the meal period is open, try to parse open/close times
+                if (isOpen && mealTime.includes(' - ')) {
+                  const [openTime, closeTime] = mealTime.split(' - ').map(t => t.trim());
+                  hourInfo.open = openTime;
+                  hourInfo.close = closeTime;
+                } else {
+                  hourInfo.open = null;
+                  hourInfo.close = null;
+                }
+                
+                results[diningHallName].hours.push(hourInfo);
+              }
+            });
+          }
+          
+          // Log the scraped hours for this dining hall
+          if (results[diningHallName].hours.length > 0) {
+            console.log(`  Hours for ${diningHallName}:`);
+            results[diningHallName].hours.forEach(hour => {
+              const status = hour.isOpen ? '✓ OPEN' : '✗ CLOSED';
+              console.log(`    ${hour.label}: ${hour.time} [${status}]`);
+            });
+          } else {
+            console.log(`  No hours found for ${diningHallName}`);
+          }
           
           // Find all meal period dropdowns (breakfast, lunch, dinner, etc.)
           $('a.category-anchor-link').each((index, anchor) => {
@@ -98,17 +156,11 @@ class WebScrapeController {
                       // Extract ingredients from the description paragraph
                       const ingredients = $card.find('.see-menu-details p').text().trim();
                       
-                      // Extract recipe detail link for nutrition info
-                      const recipeDetailLink = $card.find('a.recipe-detail-link').attr('href');
-                      const fullRecipeUrl = recipeDetailLink ? `https://dining.ucla.edu${recipeDetailLink}` : null;
-                      
                       // Add meal to station
                       results[diningHallName].meals[mealPeriod].stations[stationName].menuItems.push({
                         name: mealName,
                         station: stationName,
-                        ingredients: ingredients,
-                        nutritionDetailUrl: fullRecipeUrl,
-                        nutritionInfo: null // Will be populated if we scrape the detail page
+                        ingredients: ingredients
                       });
                       
                       totalItems++;
@@ -160,127 +212,18 @@ class WebScrapeController {
   }
   
   /**
-   * Get detailed information about a specific meal
-   * @param {string} mealUrl - URL to the meal's detail page
-   * @returns {Promise<Object>} Detailed information about the meal
-   */
-  static async getMealDetails(mealUrl) {
-    try {
-      const response = await axios.get(mealUrl);
-      const $ = cheerio.load(response.data);
-      
-      // Extract nutrition information from the nutrition div
-      const nutritionInfo = {};
-      
-      // Look for the nutrition div specifically
-      const nutritionDiv = $('#nutrition');
-      
-      if (nutritionDiv.length > 0) {
-        // Extract serving size from <strong>Serving Size:</strong> format
-        const servingSizeText = nutritionDiv.find('strong:contains("Serving Size")').parent().text();
-        if (servingSizeText) {
-          const servingSizeMatch = servingSizeText.match(/Serving Size:\s*(.+?)(?:\n|$|<)/);
-          if (servingSizeMatch) {
-            nutritionInfo['serving_size'] = servingSizeMatch[1].trim();
-          }
-        }
-        
-        // Extract calories from <p class='single-calories'><span>Calories</span>590</p>
-        const caloriesElement = nutritionDiv.find('.single-calories');
-        if (caloriesElement.length > 0) {
-          const caloriesText = caloriesElement.text().trim();
-          const caloriesMatch = caloriesText.match(/Calories\s*(\d+)/);
-          if (caloriesMatch) {
-            nutritionInfo['calories'] = caloriesMatch[1];
-          }
-        }
-        
-        // Extract nutrition facts from table rows with <span>Label</span>Value format
-        nutritionDiv.find('.nutritive-table tr').each((i, row) => {
-          const $row = $(row);
-          
-          // Skip header rows
-          if ($row.find('th').length > 0) return;
-          
-          const firstCell = $row.find('td').first();
-          if (firstCell.length > 0) {
-            const span = firstCell.find('span');
-            if (span.length > 0) {
-              const label = span.text().trim();
-              const fullText = firstCell.text().trim();
-              
-              // Extract the value after the label
-              const value = fullText.replace(label, '').trim();
-              
-              if (label && value) {
-                const cleanLabel = label.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-                nutritionInfo[cleanLabel] = value;
-                
-                // Also get the percentage if it exists in the second cell
-                const secondCell = $row.find('td').eq(1);
-                if (secondCell.length > 0) {
-                  const percentage = secondCell.text().trim();
-                  if (percentage && percentage !== '&nbsp;' && percentage !== '') {
-                    nutritionInfo[`${cleanLabel}_daily_value`] = percentage;
-                  }
-                }
-              }
-            }
-          }
-        });
-        
-        // Handle two-column nutritive table (for vitamins/minerals)
-        nutritionDiv.find('.nutritive-table-two-column tr').each((i, row) => {
-          const $row = $(row);
-          const cells = $row.find('td');
-          
-          // Process pairs of cells (nutrient + percentage)
-          for (let i = 0; i < cells.length; i += 2) {
-            const nutrientCell = $(cells[i]);
-            const percentageCell = $(cells[i + 1]);
-            
-            if (nutrientCell.length > 0) {
-              const span = nutrientCell.find('span');
-              if (span.length > 0) {
-                const label = span.text().trim();
-                const fullText = nutrientCell.text().trim();
-                const value = fullText.replace(label, '').trim();
-                
-                if (label && value) {
-                  const cleanLabel = label.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-                  nutritionInfo[cleanLabel] = value;
-                  
-                  // Add percentage if available
-                  if (percentageCell && percentageCell.length > 0) {
-                    const percentage = percentageCell.text().trim();
-                    if (percentage && percentage !== '&nbsp;' && percentage !== '') {
-                      nutritionInfo[`${cleanLabel}_daily_value`] = percentage;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-      
-      return {
-        nutritionInfo
-      };
-    } catch (error) {
-      console.error('Error getting meal details:', error);
-      return {
-        nutritionInfo: {}
-      };
-    }
-  }
-  
-  /**
    * Update the database with the latest menu information
    * @returns {Promise<void>}
    */
   static async updateMenuDatabase() {
+    // Prevent concurrent scraping
+    if (WebScrapeController.isScrapingInProgress) {
+      return;
+    }
+    
     try {
+      WebScrapeController.isScrapingInProgress = true;
+      const timestamp = new Date().toISOString();
       const allMenus = await this.scrapeAllMenus();
       const today = new Date();
       
@@ -289,18 +232,16 @@ class WebScrapeController {
         const diningHallData = allMenus[diningHallName];
         const cleanDiningHallName = diningHallName.trim(); // Remove extra whitespace
         
+        // Prepare hours array from scraped data
+        const scrapedHours = diningHallData.hours || [];
+        
         // Create or update dining hall
         const diningHall = await DiningHallModel.findOneAndUpdate(
           { name: cleanDiningHallName },
           {
             name: cleanDiningHallName,
             location: { building: cleanDiningHallName },
-            // We could scrape hours in the future if needed
-            hours: [
-              { label: 'Breakfast', open: '7:00 AM', close: '10:00 AM' },
-              { label: 'Lunch', open: '11:00 AM', close: '2:00 PM' },
-              { label: 'Dinner', open: '5:00 PM', close: '8:00 PM' }
-            ]
+            hours: scrapedHours
           },
           { upsert: true, new: true }
         );
@@ -370,64 +311,12 @@ class WebScrapeController {
         );
       }
       
-      console.log('Menu database updated successfully');
     } catch (error) {
-      console.error('Error updating menu database:', error);
+      console.error(`❌ [${new Date().toISOString()}] Error updating menu database:`, error);
       throw error;
+    } finally {
+      WebScrapeController.isScrapingInProgress = false;
     }
-  }
-  
-  /**
-   * Enrich menu data with detailed nutrition information
-   * @param {Object} menuData - Menu data from scrapeAllMenus
-   * @param {number} maxConcurrent - Maximum number of concurrent requests (default: 5)
-   * @returns {Promise<Object>} Enriched menu data with nutrition information
-   */
-  static async enrichWithNutritionData(menuData, maxConcurrent = 5) {
-    console.log("Enriching menu data with detailed nutrition information...");
-    
-    // Collect all nutrition detail URLs
-    const nutritionUrls = [];
-    
-    Object.values(menuData).forEach(diningHall => {
-      Object.values(diningHall.meals || {}).forEach(meal => {
-        Object.values(meal.stations || {}).forEach(station => {
-          (station.menuItems || []).forEach(item => {
-            if (item.nutritionDetailUrl && !item.nutritionInfo) {
-              nutritionUrls.push({
-                url: item.nutritionDetailUrl,
-                item: item
-              });
-            }
-          });
-        });
-      });
-    });
-    
-    console.log(`Found ${nutritionUrls.length} items to enrich with nutrition data`);
-    
-    // Process URLs in batches to avoid overwhelming the server
-    for (let i = 0; i < nutritionUrls.length; i += maxConcurrent) {
-      const batch = nutritionUrls.slice(i, i + maxConcurrent);
-      
-      await Promise.all(batch.map(async ({ url, item }) => {
-        try {
-          const details = await this.getMealDetails(url);
-          
-          // Merge the detailed information into the item
-          item.nutritionInfo = details.nutritionInfo;
-        } catch (error) {
-          // Continue processing other items
-        }
-      }));
-      
-      // Small delay between batches to be respectful to the server
-      if (i + maxConcurrent < nutritionUrls.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-    
-    return menuData;
   }
 }
 

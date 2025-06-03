@@ -18,7 +18,7 @@ router.delete('/:id', userController.deleteUser);
 router.post('/login', userController.checkUsernameAndPassword);
 
 //like a comment
-router.post('/:userId/like-comment', userController.likeComment);
+// router.post('/:userId/like-comment', userController.likeComment);
 
 //get comments that have been liked by a user
 router.get('/:userId/liked-comments', userController.getLikedComments);

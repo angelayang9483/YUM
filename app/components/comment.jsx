@@ -8,6 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 const Comment = ({ comment, onLikeUpdate }) => {
   const [isLiked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
+  const [diningHallName, setDiningHallName] = useState("");
   const {user} = useContext(AuthContext);
   const url = config.BASE_URL;
 
@@ -37,22 +38,35 @@ const Comment = ({ comment, onLikeUpdate }) => {
       }
     };
 
+    const getDiningHall = async () => {
+      try {
+        console.log(`trying to fetch dining hall from ${url}/api/dininghalls/${comment.diningHall}`);
+        const response = await axios.get(`${url}/api/dininghalls/${comment.diningHall}`);
+        // console.log('get dining hall response: ', response);
+        setDiningHallName(response.data.name);
+      } catch (error) {
+        console.error('Error getting the dining hall:', error);
+      }
+    };
+
     checkIfCommentIsLiked();
+    getDiningHall();
   }, [user, comment._id, url]); // Re-run when user, comment, or url changes
 
   const handleLike = async () => {
     if (!user || !comment) return;
-    
+
     try {
-      const response = await axios.post(`${url}/api/users/${user.userId}/like-comment`, {
-        commentId: comment._id
-      });
+      const response = await axios.post(`${url}/api/comments/${comment._id}/like`, {
+                          userId: user.userId
+                        });
+      console.log("handle like response: ", response.data);
 
       if (response.data.success) {
         setLiked(response.data.isLiked);
         setLikes(response.data.likeCount);
         
-        // Notify parent component if callback provided
+        // notify parent component if callback provided
         if (onLikeUpdate) {
           onLikeUpdate(comment._id, response.data.isLiked, response.data.likeCount);
         }
@@ -66,7 +80,7 @@ const Comment = ({ comment, onLikeUpdate }) => {
     <View style={styles.container}>
       <View style={styles.textContainer}>
         <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-          {comment.diningHall}
+          {diningHallName}
         </Text>
         <Text style={styles.body} numberOfLines={3} ellipsizeMode="tail">
           {comment.content}

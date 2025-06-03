@@ -12,31 +12,14 @@ const commentSchema = new Schema({
         default: 0
     },
     diningHall: {
-        type: String,
-        default: ""
-    }
-})
-
-const mealSchema = new Schema({
-    name: {
-        type: String,
-        default: ""
-    },
-    ingredients: {
-        type: [String],
-        default: []
-    },
-    nutritionalInfo: {
-        type: String,
-        default: ""
-    },
-    likes: {
-        type: Number,
-        default: 0
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DiningHall'
+    }, 
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
 })
 
 const Comment = mongoose.model('Comment', commentSchema);
-const Meal = mongoose.model('Meal', mealSchema);
-
-module.exports = { Comment, Meal };
+module.exports = Comment;

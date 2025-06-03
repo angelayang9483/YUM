@@ -20,6 +20,14 @@ const diningHallSchema = new Schema({
                     type: String,
                     default: ""
                 },
+                time: {
+                    type: String,
+                    default: ""
+                },
+                isOpen: {
+                    type: Boolean,
+                    default: true
+                },
                 open: {
                     type: String,
                     default: ""
@@ -32,8 +40,14 @@ const diningHallSchema = new Schema({
         ],
         default: []
     }
+}, {
+    timestamps: true,  // Add automatic createdAt/updatedAt
+    versionKey: false  // Remove __v field
 });
 
+// Ensure no caching issues
+diningHallSchema.set('toJSON', { virtuals: true });
+diningHallSchema.set('toObject', { virtuals: true });
 
 const DiningHall = mongoose.model("DiningHall", diningHallSchema);
 module.exports = DiningHall;
