@@ -27,6 +27,9 @@ app.use('/api/dininghalls', diningHallRoutes);
 const commentRoutes = require('./routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
 
+const scrapeFoodTrucksRoutes = require('./routes/scrapeFoodTrucksRoutes');
+app.use('/api/scrapeFoodTrucks', scrapeFoodTrucksRoutes);
+
 // Import WebScrapeController
 const WebScrapeController = require('./controllers/WebScrapeController');
 
@@ -39,8 +42,10 @@ mongoose.connect(process.env.MONGODB_URI)
   console.log('Starting automatic menu scraping...');
   try {
     await WebScrapeController.updateMenuDatabase();
+    console.log('Starting food truck scraping...');
+    await WebScrapeController.scrapeFoodTrucks();
   } catch (error) {
-    console.error('Error during initial menu scraping:', error);
+    console.error('Error during initial scraping:', error);
   }
   
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

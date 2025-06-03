@@ -358,6 +358,16 @@ class WebScrapeController {
         '9 p.m. – 12 a.m.'
       ];
       
+      // Get today's date for comparison
+      const today = new Date();
+      const todayFormatted = today.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      }); // e.g., "Mon, Jun 2"
+      
+      console.log('Today is:', todayFormatted);
+      
       const foodTrucksSet = new Set(); // For case-insensitive duplicate detection
       const locationData = {};
       
@@ -390,6 +400,10 @@ class WebScrapeController {
           const dateCell = $(cells[0]).text().trim();
           
           if (!dateCell) return; // Skip empty rows
+          
+          // Check if this date matches today
+          const isToday = dateCell.toLowerCase().includes(todayFormatted.toLowerCase().substring(0, 3)) && // Match day of week
+                         dateCell.toLowerCase().includes(todayFormatted.toLowerCase().split(' ')[2]); // Match day number
           
           // Process the two time slot cells
           for (let timeSlotIndex = 0; timeSlotIndex < 2; timeSlotIndex++) {
@@ -434,7 +448,8 @@ class WebScrapeController {
                   name: truckName, // Keep original capitalization
                   location: location,
                   timeSlot: timeSlot,
-                  date: dateCell
+                  date: dateCell,
+                  hereToday: isToday
                 });
               }
             });
@@ -478,10 +493,14 @@ class WebScrapeController {
               { name: truckData.name }, // Use exact name for matching
               {
                 $set: {
-                  name: truckData.name,
                   dailyLocation: truckData.location,
-                  hours: hoursArray
-                }
+                  hours: hoursArray,
+                  hereToday: truckData.hereToday
+                },
+                $setOnInsert: {
+                  name: truckData.name,
+                  likeCount: 0
+                } 
               },
               { upsert: true, new: true }
             )

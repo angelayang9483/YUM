@@ -29,6 +29,14 @@ const foodTruckSchema = new Schema({
             }
         ],
         default: []
+    },
+    hereToday: {
+        type: Boolean,
+        default: false
+    },
+    likeCount: {
+        type: Number,
+        default: 0
     }
 });
 
