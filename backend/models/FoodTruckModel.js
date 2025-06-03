@@ -7,10 +7,6 @@ const foodTruckSchema = new Schema({
         type: String,
         required: true
     },
-    cuisine: {
-        type: String,
-        default: ""
-    },
     dailyLocation: {
         type: String,
         default: ""
@@ -33,6 +29,14 @@ const foodTruckSchema = new Schema({
             }
         ],
         default: []
+    },
+    hereToday: {
+        type: Boolean,
+        default: false
+    },
+    likeCount: {
+        type: Number,
+        default: 0
     }
 });
 
