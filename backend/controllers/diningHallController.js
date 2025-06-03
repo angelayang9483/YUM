@@ -1,11 +1,10 @@
-const DiningHallModel = require('../models/DiningHallModel');
 const DiningHall = require('../models/DiningHallModel');
 
 // GET all dining halls
 const getDiningHalls = async (req, res) => {
   try {
     const timestamp = new Date().toISOString();
-    const diningHalls = await DiningHallModel.find();
+    const diningHalls = await DiningHall.find();
     
     console.log(`\n🔍 [${timestamp}] getDiningHalls called - Found ${diningHalls.length} dining halls:`);
     diningHalls.forEach(hall => {
