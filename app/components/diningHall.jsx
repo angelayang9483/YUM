@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
 import Menu from './menu.jsx';
-import { FontAwesome } from '@expo/vector-icons';
 
 const DiningHall = (props) => {
     const [isLiked, setLiked] = useState(props.isLiked);
@@ -36,23 +35,9 @@ const DiningHall = (props) => {
             }}
             >
             <View style={styles.nameTimeContainer}>
-                <Text style={styles.name}>Bruin Plate</Text>
-                <Text style={styles.time}>Closes at 3:00pm</Text>
+                <Text style={styles.name}>{props.name}</Text>
+                <Text style={styles.time}>{props.isOpen ? 'Closes' : 'Opens'} at {props.isOpen ? props.closeTime : props.nextOpenTime}</Text>
             </View>
-            </Pressable>
-
-            <Pressable 
-            onPress={() => {
-                console.log('Toggle favorite');
-                handleLike();
-            }}
-            hitSlop={10}   // optional: makes it easier to tap
-            >
-                <FontAwesome 
-                    name={isLiked ? "heart" : "heart-o"} 
-                    size={20} 
-                    color={isLiked ? "white" : "white"} 
-                />
             </Pressable>
 
             {menuVisible && (
@@ -96,9 +81,6 @@ const styles = StyleSheet.create({
     time: {
       color: 'white',
       paddingTop: 2,
-    },
-    heart: {
-      color: 'white',
     }
   });
 
