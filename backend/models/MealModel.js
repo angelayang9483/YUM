@@ -22,6 +22,10 @@ const mealSchema = new Schema({
     favoritesCount: {
         type: Number,
         default: 0
+    },
+    hereToday: {
+        type: Boolean,
+        default: false
     }
 });
 

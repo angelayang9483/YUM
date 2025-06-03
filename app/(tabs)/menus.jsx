@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -8,6 +9,8 @@ import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import DiningHall from '../components/diningHall.jsx'
+
+ 
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -50,65 +53,16 @@ export default function Tab() {
   }
 
   const getDiningHalls = async () => {
-    // console.log("Attempting to scrape the info");
+    console.log("Attempting to scrape the info");
     const response1 = await axios.post(`${url}/api/scrapeMenus`);
-    // console.log("scraping info response:", response1.data);
+    console.log("scraping info response:", response1.data);
     
-    // console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
+    console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
     const response = await axios.get(`${url}/api/dininghalls`);
     console.log('Dining hall data response:', response.data);
     setDiningHalls(response.data);
   }
 
-  const now = new Date();
-
-  // test
-  // const now = new Date(
-  //   new Date().getFullYear(),  // year
-  //   new Date().getMonth(),     // month (0-indexed)
-  //   new Date().getDate(),      // day of the month
-  //   13,                        // hour (1 PM)
-  //   0,                         // minutes
-  //   0,                         // seconds
-  //   0                          // milliseconds
-  // );
-
-  function isDiningHallOpen(hall, mealPeriod, now) {
-    if (!hall || !hall.hours || hall.hours.length === 0) {
-      return false;
-    }
-  
-    const todayString = now.toDateString();
-    const hours = now.getHours();
-  
-    for (const period of hall.hours) {
-      if (!period.label || !period.open || !period.close) continue;
-  
-      // Compare period label to mealPeriod
-      if (period.label.toLowerCase().trim() !== mealPeriod.toLowerCase().trim()) continue;
-  
-      const openTimeString = period.open.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
-      const closeTimeString = period.close.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
-  
-      let openTime = parseInt(openTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(openTimeString) && openTime !== 12) openTime += 12;
-  
-      let closeTime = parseInt(closeTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(closeTimeString) && closeTime !== 12) closeTime += 12;
-  
-      console.log(`Checking: ${hall.name}, ${period.label}, ${openTime} - ${closeTime}`);
-      console.log(hours);
-      console.log(closeTime);
-  
-      if (hours >= openTime && hours < closeTime) {
-        console.log('here');
-        return true;
-      }
-    }
-  
-    return false;
-  }  
-  
   useEffect(() => {
     getDiningHalls();
   }, []);  // Run once on mount

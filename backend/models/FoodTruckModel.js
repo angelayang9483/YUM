@@ -7,10 +7,6 @@ const foodTruckSchema = new Schema({
         type: String,
         required: true
     },
-    cuisine: {
-        type: String,
-        default: ""
-    },
     dailyLocation: {
         type: String,
         default: ""
