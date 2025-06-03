@@ -5,6 +5,8 @@ import { FontAwesome } from '@expo/vector-icons';
 const Meal = (props) => {
     const [isLiked, setLiked] = useState(props.isLiked);
     const [likes, setLikes] = useState(props.likes);
+    const [favorites, setFavorites] = useState([]);
+    const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
 
     const handleLike = async () => {
         // if (!user || !comment) return;
@@ -25,13 +27,13 @@ const Meal = (props) => {
                 <Text style={styles.item}>Chipotle Chicken Bowl</Text>
                 <Text style={styles.diningHall}>Bruin Plate</Text>
             </View>
-            {/* <Pressable onPress={handleLikePress} style={styles.heartContainer}>
+            <Pressable onPress={handleLike} style={styles.heartContainer}>
                 <FontAwesome 
                 name={isLiked ? "heart" : "heart-o"} 
                 size={20} 
                 color="white" 
                 />
-            </Pressable> */}
+            </Pressable>
         </View>
     );
 };
@@ -66,5 +68,11 @@ const styles = StyleSheet.create({
     diningHall: {
       color: 'white',
       paddingTop: 2,
+    },
+    heartContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 0,
+        minWidth: 30,
     }
   });

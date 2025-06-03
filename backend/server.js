@@ -27,6 +27,9 @@ app.use('/api/dininghalls', diningHallRoutes);
 const commentRoutes = require('./routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
 
+const mealRoutes = require('./routes/mealRoutes');
+app.use('/api/meals', mealRoutes);
+
 // Import WebScrapeController
 const WebScrapeController = require('./controllers/WebScrapeController');
 
