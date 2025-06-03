@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Line from '../components/line.jsx';
+import Meal from '../components/meal.jsx';
 
 export default function Tab() {
   return (
@@ -15,6 +16,7 @@ export default function Tab() {
         <Text style={styles.heading}>Open Now</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Dining Halls</Text>
+          <Meal />
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
