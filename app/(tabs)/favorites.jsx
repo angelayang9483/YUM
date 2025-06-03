@@ -95,6 +95,7 @@ export default function Tab() {
               name={meal.name}
               diningHall={meal.diningHall}
               isLiked={true}
+              location={'favorites'}
             />
           ))
         }

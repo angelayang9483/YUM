@@ -5,31 +5,31 @@ import { FontAwesome } from '@expo/vector-icons';
 const Meal = (props) => {
     const [isLiked, setLiked] = useState(props.isLiked);
     const [likes, setLikes] = useState(props.likes);
-    const [favorites, setFavorites] = useState([]);
-    const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
 
     const handleLike = async () => {   
         try {
-        // send to database 
-
-        setLiked(!isLiked);
-
+            // send to database 
+            setLiked(!isLiked);
         } catch (error) {
-          console.error('Error liking meal:', error);
+            console.error('Error liking meal:', error);
         }
     };
 
+    const isFavorites = props.location === "favorites";
+
     return (
-        <View style={styles.cardContainer}>
+        <View style={isFavorites ? styles.favoritesContainer : styles.menusContainer}>
             <View style={styles.textContainer}>
-                <Text style={styles.item}>{props.name}</Text>
-                <Text style={styles.diningHall}>{props.diningHall}</Text>
+                <Text style={isFavorites ? styles.favoritesItem : styles.menusItem}>{props.name}</Text>
+                {isFavorites && (
+                    <Text style={styles.diningHall}>{props.diningHall}</Text>
+                )}
             </View>
             <Pressable onPress={handleLike} style={styles.heartContainer}>
                 <FontAwesome 
-                name={isLiked ? "heart" : "heart-o"} 
-                size={20} 
-                color="white" 
+                    name={isLiked ? "heart" : "heart-o"} 
+                    size={20} 
+                    color="white" 
                 />
             </Pressable>
         </View>
@@ -39,34 +39,50 @@ const Meal = (props) => {
 export default Meal;
 
 const styles = StyleSheet.create({
-    cardContainer: {
-      backgroundColor: '#467FB6',
-      width: '100%',
-      borderRadius: 10,
-      marginTop: 10,
-      paddingHorizontal: 15,
-      height: 75,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+    favoritesContainer: {
+        backgroundColor: '#467FB6',
+        width: '100%',
+        borderRadius: 10,
+        marginTop: 10,
+        paddingHorizontal: 15,
+        height: 75,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    menusContainer: {
+        backgroundColor: '#467FB6',
+        width: '100%',
+        borderRadius: 10,
+        marginTop: 5,
+        paddingHorizontal: 15,
+        height: 50, // thinner height
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     cardContent: {
-      flex: 1,   // take up all available space except the heart
-      height: '100%',
-      justifyContent: 'center',
+        flex: 1,
+        height: '100%',
+        justifyContent: 'center',
     },
     textContainer: {
-      flexDirection: 'column',
-      width: '80%'
+        flexDirection: 'column',
+        width: '80%',
     },
-    item: {
-      color: 'white',
-      fontSize: 16,
-      fontWeight: '700',
+    favoritesItem: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    menusItem: {
+        color: 'white',
+        fontSize: 15,
+        fontWeight: '500'
     },
     diningHall: {
-      color: 'white',
-      paddingTop: 2,
+        color: 'white',
+        paddingTop: 2,
     },
     heartContainer: {
         flexDirection: 'row',
@@ -74,4 +90,4 @@ const styles = StyleSheet.create({
         flexShrink: 0,
         minWidth: 30,
     }
-  });
+});
