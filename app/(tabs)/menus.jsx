@@ -5,9 +5,6 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import DiningHall from '../components/diningHall.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
-import config from '../config';
-import { AuthContext } from '../context/AuthContext';
-import DiningHall from '../components/diningHall.jsx'
 
 export default function Tab() {
   const url = config.BASE_URL;
