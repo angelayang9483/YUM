@@ -33,12 +33,9 @@ mongoose.connect(process.env.MONGODB_URI)
   console.log('MongoDB connected');
   
   // Automatically scrape menus when server starts
-  console.log('🚀 Starting automatic menu scraping...');
   try {
     await WebScrapeController.updateMenuDatabase();
-    console.log('✅ Initial menu scraping completed successfully');
   } catch (error) {
-    console.error('❌ Error during initial menu scraping:', error);
   }
   
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
