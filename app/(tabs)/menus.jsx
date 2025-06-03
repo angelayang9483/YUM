@@ -5,7 +5,6 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import DiningHall from '../components/diningHall.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
-ine from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import DiningHall from '../components/diningHall.jsx'
