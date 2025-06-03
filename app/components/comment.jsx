@@ -1,79 +1,39 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
-import axios from 'axios';
 import config from '../config';
-import { AuthContext } from '../context/AuthContext';
 
-const Comment = ({ comment, onLikeUpdate }) => {
-  const [isLiked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(0);
+const Comment = ({ comment, onLike, liked }) => {
+  const [isLiked, setLiked] = useState(liked || false);
+  const [likes, setLikes] = useState(comment.likes || 0);
   const [diningHallName, setDiningHallName] = useState("");
-  const {user} = useContext(AuthContext);
+
   const url = config.BASE_URL;
 
   useEffect(() => {
-    if (comment?.likes) {
-      setLikes(comment.likes);
-    }
-  }, [comment?.likes]);
+    setLiked(liked || false);
+  }, [liked]);
 
-  // Check if user has liked this comment
   useEffect(() => {
-    const checkIfCommentIsLiked = async () => {
-      if (!user || !comment) return;
+    setLikes(comment.likes || 0);
+  }, [comment.likes]);
 
-      try {
-        const response = await axios.get(`${url}/api/users/${user.userId}`);
-        const userData = response.data;
-        
-        // Check if this comment's ID is in the user's likedComments array
-        const isCommentLiked = userData.likedComments.includes(comment._id);
-        setLiked(isCommentLiked);
-        
-      } catch (error) {
-        console.error('Error checking if comment is liked:', error);
-        // If error, assume not liked (safe fallback)
-        setLiked(false);
-      }
-    };
-
+  useEffect(() => {
     const getDiningHall = async () => {
       try {
-        console.log(`trying to fetch dining hall from ${url}/api/dininghalls/${comment.diningHall}`);
-        const response = await axios.get(`${url}/api/dininghalls/${comment.diningHall}`);
-        // console.log('get dining hall response: ', response);
-        setDiningHallName(response.data.name);
+        const response = await fetch(`${url}/api/dininghalls/${comment.diningHall}`);
+        const data = await response.json();
+        setDiningHallName(data.name);
       } catch (error) {
         console.error('Error getting the dining hall:', error);
       }
     };
 
-    checkIfCommentIsLiked();
     getDiningHall();
-  }, [user, comment._id, url]); // Re-run when user, comment, or url changes
+  }, [comment.diningHall]);
 
-  const handleLike = async () => {
-    if (!user || !comment) return;
-
-    try {
-      const response = await axios.post(`${url}/api/comments/${comment._id}/like`, {
-                          userId: user.userId
-                        });
-      console.log("handle like response: ", response.data);
-
-      if (response.data.success) {
-        setLiked(response.data.isLiked);
-        setLikes(response.data.likeCount);
-        
-        // notify parent component if callback provided
-        if (onLikeUpdate) {
-          onLikeUpdate(comment._id, response.data.isLiked, response.data.likeCount);
-        }
-      }
-    } catch (error) {
-      console.error('Error liking comment:', error);
-    }
+  const handleLikePress = () => {
+    if (onLike) onLike(comment._id);
   };
 
   return (
@@ -86,12 +46,11 @@ const Comment = ({ comment, onLikeUpdate }) => {
           {comment.content}
         </Text>
       </View>
-      
-      <Pressable onPress={handleLike} style={styles.heartContainer}>
+      <Pressable onPress={handleLikePress} style={styles.heartContainer}>
         <FontAwesome 
           name={isLiked ? "heart" : "heart-o"} 
           size={20} 
-          color={isLiked ? "white" : "white"} 
+          color="white" 
         />
         <Text style={styles.likeCount}>{likes}</Text>
       </Pressable>
