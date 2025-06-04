@@ -1,14 +1,12 @@
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, SectionList, SafeAreaView} from 'react-native';
+import { useEffect, useState } from 'react';
+import { SafeAreaView, SectionList, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { SearchBar } from 'react-native-elements';
-import DiningHall from '../components/diningHall.jsx';  
+import DiningHall from '../components/diningHall.jsx';
 import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
-import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -22,6 +20,7 @@ export default function Tab() {
   const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
   const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
   const [filteredHalls, setFilteredHalls] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const mealPeriodDict = {
     'Breakfast': 0,
@@ -77,18 +76,7 @@ export default function Tab() {
   };
 
   const now = new Date();
-
-  // test
-  // const now = new Date(
-  //   new Date().getFullYear(),  // year
-  //   new Date().getMonth(),     // month (0-indexed)
-  //   new Date().getDate(),      // day of the month
-  //   13,                        // hour (1 PM)
-  //   0,                         // minutes
-  //   0,                         // seconds
-  //   0                          // milliseconds
-  // );
-
+  
   function isDiningHallOpen(hall, mealPeriod, now) {
     if (!hall || !hall.hours || hall.hours.length === 0) {
       return false;
@@ -125,10 +113,42 @@ export default function Tab() {
     return false;
   }  
   
+  // display loading screen if it is still scraping info
+  useEffect(() => {
+    const checkScraping = async () => {
+      let scraping = true;
+      while (scraping) {
+        try {
+          const response = await axios.get(`${url}/scrape-status`);
+          console.log(response.data);
+          scraping = response.data.isScraping;
+          // If we have data, don't keep waiting for scraping status
+          if (!scraping || diningHalls.length > 0) {
+            console.log('Data loaded or scraping complete, showing content');
+            setLoading(false);
+            break;  // Exit the loop once we have data
+          }
+        } catch (err) {
+          console.log('Scraping status check error - checking if data is available');
+          // If we have data despite scraping status error, show content
+          if (diningHalls.length > 0) {
+            console.log('Data available, showing content despite scraping error');
+            setLoading(false);
+            break;
+          }
+          await new Promise(res => setTimeout(res, 2000));
+        }
+        await new Promise(res => setTimeout(res, 1000));
+      }
+    };
+
+    checkScraping();
+  }, [diningHalls]);
+
   useEffect(() => {
     console.log('Getting dining halls');
     getDiningHalls();
-  }, []);  // Run once on mount
+  }, []);
 
   // supposed to run every 30 minutes
   useEffect(() => {
@@ -255,6 +275,15 @@ export default function Tab() {
       </View>
     );
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>Loading menu...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

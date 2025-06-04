@@ -17,6 +17,10 @@ const userSchema = new Schema({
         type: [String],
         default: []
     }, 
+    favoriteFoodTrucks: {
+        type: [String],
+        default: []
+    },
     karma: {
         type: Number,
         default: 0

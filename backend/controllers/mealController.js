@@ -1,9 +1,9 @@
-const MealModel = require('../models/MealModel');
+const Meal = require('../models/MealModel');
 
 // GET all meals
 const getMeals = async (req, res) => {
   try {
-    const meals = await MealModel.find();
+    const meals = await Meal.find();
     res.status(200).json(meals);
   } catch (err) {
     console.error('Error fetching meals:', err);
@@ -14,7 +14,7 @@ const getMeals = async (req, res) => {
 // GET meal by ID
 const getMealById = async (req, res) => {
   try {
-    const meal = await MealModel.findById(req.params.id);
+    const meal = await Meal.findById(req.params.id);
     if (!meal) {
       return res.status(404).json({ message: 'Meal not found' });
     }
@@ -35,12 +35,12 @@ const getMealsByName = async (req, res) => {
         }
         
         if (!search) {
-          const allItems = await MealModel.find().limit(50);
+          const allItems = await Meal.find().limit(50);
           return res.json(allItems);
         }
 
         const regex = new RegExp('^' + escapeRegex(search), 'i');
-        const matches = await MealModel.find({ name: regex }).limit(50);
+        const matches = await Meal.find({ name: regex }).limit(50);
 
         return res.json(matches);
       } catch (err) {
@@ -54,7 +54,7 @@ const getMealsByName = async (req, res) => {
 const getMealsByCategory = async (req, res) => {
     try {
         const { category } = req.query;
-        const meals = await MealModel.find({ category });
+        const meals = await Meal.find({ category });
         res.json(meals);
       } catch (err) {
         console.error(err);
@@ -66,7 +66,7 @@ const getMealsByCategory = async (req, res) => {
 // POST new meal
 const createMeal = async (req, res) => {
     try {
-      const meal = await MealModel.create(req.body);
+      const meal = await Meal.create(req.body);
       res.status(201).json(meal);
     } catch (err) {
       console.error('Error creating meal:', err);
