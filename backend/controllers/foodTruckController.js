@@ -107,5 +107,5 @@ module.exports = {
   getFoodTrucksHereToday,
   getFoodTruckById,
   favoriteFoodTruck,
-  popularFoodTrucks
+  getPopularFoodTrucks
 };
