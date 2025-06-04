@@ -1,12 +1,11 @@
 import axios from 'axios';
+import { useFonts } from 'expo-font';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import FoodTruck from '../components/foodTruck.jsx';
-import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import { useFonts } from 'expo-font';
 import { getClosingTruckTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isFoodTruckOpen } from '../utils/helpers.js';
 
 export default function Tab() {

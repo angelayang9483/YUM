@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useFonts } from 'expo-font';
 import { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SearchBar } from 'react-native-elements';
@@ -7,7 +8,6 @@ import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import { getClosingTime, getClosingTruckTime, getDiningHalls, getFoodTrucks, getNextOpenTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isDiningHallOpen, isFoodTruckOpen } from '../utils/helpers.js';
-import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -235,10 +235,10 @@ useEffect(() => {
               />
             </View>
           ))}
+          <Text style={styles.subheading}>FOOD TRUCKS</Text>
           {filteredFoodTrucks.map((truck) => (
             <View key={truck._id}>
               <FoodTruck
-                style={styles.foodTruck}
                 truck={truck}
                 isOpen={isFoodTruckOpen(truck, now)}
                 closeTime={isFoodTruckOpen(truck, now) ? getClosingTruckTime(truck, now) : null}
@@ -248,71 +248,55 @@ useEffect(() => {
               />
             </View>
           ))}
-          <Text style={styles.subheading}>FOOD TRUCKS</Text>
-          {filteredTrucks.map((truck) => (
-            <View key={truck._id}>
-              <FoodTruck
-                key={truck._id} 
-                truck={truck} 
-                isOpen={isFoodTruckOpen(truck)}
-                closeTime={isFoodTruckOpen(truck) ? getClosingTruckTime(truck) : null}
-                nextOpenTime={!isFoodTruckOpen(truck) ? getNextOpenTruckTime(truck) : null}
-                location={'menus'}
-              />
-            </View>
-          ))
-          }
-        </View>
+      </View>
       );
     }
-
     // Normal view with sections
-    return (
-      <View>
-        <Text style={styles.subheading}>DINING HALLS</Text>
-        {section.title === 'open now' ? openDiningHalls.map((hall) => (
-          <View key={hall._id}>
-            <DiningHall
-              style={styles.diningHall}
-              id={hall._id}
-              name={hall.name}
-              isOpen={true}
-              closeTime={getClosingTime(hall, now)}
-            />
-          </View>
-        )) : closedDiningHalls.map((hall) => (
-          <View key={hall._id}>
-            <DiningHall
-              style={styles.diningHall}
-              id={hall._id}
-              name={hall.name}
-              isOpen={false}
-              nextOpenTime={getNextOpenTime(hall, now)}
-            />
-          </View>
-        ))}
-        <Text style={styles.subheading}>FOOD TRUCKS</Text>
-        {section.title === 'open now' ? openFoodTrucks.map((truck) => (
-          <View key={truck._id}>
-            <FoodTruck 
-              key={truck._id}
-              truck={truck}
-              isOpen={true}
-              closeTime={getClosingTruckTime(truck, now)}
-              location="menus"
-              isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
-            />
-        )) : closedFoodTrucks.map((truck) => (
-            <FoodTruck 
-              key={truck._id} 
-              truck={truck} 
-              isOpen={false}
-              nextOpenTime={getNextOpenTruckTime(truck, now)}
-              location="menus"
-              isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
-            />
-        ))}
-      </View>
+  return (
+    <View>
+      <Text style={styles.subheading}>DINING HALLS</Text>
+      {section.title === 'open now' ? openDiningHalls.map((hall) => (
+        <View key={hall._id}>
+          <DiningHall
+            style={styles.diningHall}
+            id={hall._id}
+            name={hall.name}
+            isOpen={true}
+            closeTime={getClosingTime(hall, now)}
+          />
+        </View>
+      )) : closedDiningHalls.map((hall) => (
+        <View key={hall._id}>
+          <DiningHall
+            style={styles.diningHall}
+            id={hall._id}
+            name={hall.name}
+            isOpen={false}
+            nextOpenTime={getNextOpenTime(hall, now)}
+          />
+        </View>
+      ))}
+      <Text style={styles.subheading}>FOOD TRUCKS</Text>
+      {section.title === 'open now' ? openFoodTrucks.map((truck) => (
+          <FoodTruck 
+            key={truck._id}
+            truck={truck}
+            isOpen={true}
+            closeTime={getClosingTruckTime(truck, now)}
+            location="menus"
+            isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+          />
+      )) : closedFoodTrucks.map((truck) => (
+          <FoodTruck 
+            key={truck._id} 
+            truck={truck} 
+            isOpen={false}
+            nextOpenTime={getNextOpenTruckTime(truck, now)}
+            location="menus"
+            isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+          />
+      ))}
+    </View>
     );
   };
 
