@@ -7,13 +7,17 @@ import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import DiningHall from '../components/diningHall.jsx'
+import DiningHall from '../components/diningHall.jsx';
+import FoodTruck from '../components/foodTruck.jsx';
 
 export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
+  const { user } = useContext(AuthContext);
+
   const [diningHalls, setDiningHalls] = useState([]);
   const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
+  const [foodTrucks, setFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
   const [mealPeriod, setMealPeriod] = useState('none');
@@ -110,6 +114,7 @@ export default function Tab() {
       )
     }
   }
+
   
   // get the dining halls and food trucks
   useEffect(() => {
@@ -119,14 +124,14 @@ export default function Tab() {
       setDiningHalls(response.data);
     }
 
-    const getOpenFoodTrucks = async () => {
+    const getFoodTrucks = async () => {
       const response = await axios.get(`${url}/api/foodtrucks/here`);
       console.log("Food truck data response: ", response.data);
-      setOpenFoodTrucks(response.data);
+      setFoodTrucks(response.data);
     }
 
     getDiningHalls();
-    getOpenFoodTrucks();
+    getFoodTrucks();
   }, []);
 
   // rechecks meal period every 30 minutes
@@ -237,6 +242,14 @@ export default function Tab() {
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
+          {
+            foodTrucks.map(truck => (
+              <FoodTruck 
+                key={truck._id} 
+                truck={truck} 
+              />
+            ))
+          }
         </View>
       </View>
 
