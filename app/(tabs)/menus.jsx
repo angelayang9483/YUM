@@ -207,7 +207,7 @@ useEffect(() => {
       diningHalls.filter((hall) => 
         hall.name.toLowerCase().includes(text.toLowerCase().trim())
       );
-    setFilteredHalls(filtered);
+    setFilteredHalls(filteredDiningHalls);
     const filteredFT = text.trim() === '' ? [] : 
       foodTrucks.filter((truck) => 
         truck.name.toLowerCase().includes(text.toLowerCase().trim())
@@ -221,33 +221,41 @@ useEffect(() => {
     if (searchValue.trim() !== '') {
       return (
         <View>
-          <Text style={styles.subheading}>Search Results</Text>
+          <Text style={styles.heading}>search results</Text>
           <Text style={styles.subheading}>DINING HALLS</Text>
-          {filteredHalls.map((hall) => (
-            <View key={hall._id}>
-              <DiningHall
-                style={styles.diningHall}
-                id={hall._id}
-                name={hall.name}
-                isOpen={isDiningHallOpen(hall, now)}
-                closeTime={isDiningHallOpen(hall, now) ? getClosingTime(hall, now) : null}
-                nextOpenTime={!isDiningHallOpen(hall, now) ? getNextOpenTime(hall, now) : null}
-              />
-            </View>
-          ))}
+          {filteredHalls.length > 0 ? (
+            filteredHalls.map((hall) => (
+              <View key={hall._id}>
+                <DiningHall
+                  style={styles.diningHall}
+                  id={hall._id}
+                  name={hall.name}
+                  isOpen={isDiningHallOpen(hall, now)}
+                  closeTime={isDiningHallOpen(hall, now) ? getClosingTime(hall, now) : null}
+                  nextOpenTime={!isDiningHallOpen(hall, now) ? getNextOpenTime(hall, now) : null}
+                />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noMatch}>No matching dining halls</Text>
+          )}
           <Text style={styles.subheading}>FOOD TRUCKS</Text>
-          {filteredFoodTrucks.map((truck) => (
-            <View key={truck._id}>
-              <FoodTruck
-                truck={truck}
-                isOpen={isFoodTruckOpen(truck, now)}
-                closeTime={isFoodTruckOpen(truck, now) ? getClosingTruckTime(truck, now) : null}
-                nextOpenTime={!isFoodTruckOpen(truck, now) ? getNextOpenTruckTime(truck, now) : null}
-                location="menus"
-                isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
-              />
-            </View>
-          ))}
+          {filteredFoodTrucks.length > 0 ? (
+            filteredFoodTrucks.map((truck) => (
+              <View key={truck._id}>
+                <FoodTruck
+                  truck={truck}
+                  isOpen={isFoodTruckOpen(truck, now)}
+                  closeTime={isFoodTruckOpen(truck, now) ? getClosingTruckTime(truck, now) : null}
+                  nextOpenTime={!isFoodTruckOpen(truck, now) ? getNextOpenTruckTime(truck, now) : null}
+                  location="menus"
+                  isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+                />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noMatch}>No matching food trucks</Text>
+          )}
       </View>
       );
     }
@@ -448,5 +456,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     paddingHorizontal: 0,
     marginBottom: 10,
+  },
+  noMatch: {
+    fontSize: 15,
+    fontFamily: 'Gill-Sans-Bold',
+    alignSelf: 'center',
+    padding: 10,
   },
 });
