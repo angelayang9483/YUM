@@ -222,7 +222,7 @@ useEffect(() => {
       return (
         <View>
           <Text style={styles.heading}>search results</Text>
-          <Text style={styles.subheading}>DINING HALLS</Text>
+          <Text style={styles.subheading}>Dining Halls</Text>
           {filteredHalls.length > 0 ? (
             filteredHalls.map((hall) => (
               <View key={hall._id}>
@@ -239,7 +239,7 @@ useEffect(() => {
           ) : (
             <Text style={styles.noMatch}>No matching dining halls</Text>
           )}
-          <Text style={styles.subheading}>FOOD TRUCKS</Text>
+          <Text style={styles.subheading}>Food Trucks</Text>
           {filteredFoodTrucks.length > 0 ? (
             filteredFoodTrucks.map((truck) => (
               <View key={truck._id}>
@@ -262,7 +262,7 @@ useEffect(() => {
     // Normal view with sections
   return (
     <View>
-      <Text style={styles.subheading}>DINING HALLS</Text>
+      <Text style={styles.subheading}>Dining Halls</Text>
       {section.title === 'open now' ? openDiningHalls.map((hall) => (
         <View key={hall._id}>
           <DiningHall
@@ -284,7 +284,7 @@ useEffect(() => {
           />
         </View>
       ))}
-      <Text style={styles.subheading}>FOOD TRUCKS</Text>
+      <Text style={styles.subheading}>Food Trucks</Text>
       {section.title === 'open now' ? openFoodTrucks.map((truck) => (
           <FoodTruck 
             key={truck._id}
@@ -318,38 +318,12 @@ useEffect(() => {
   }
 
   return (
-        // <Text style={styles.heading}>Open Now</Text>
-        // <View style={styles.subsection}>
-        //   <Text style={styles.subheading}>Dining Halls</Text>
-        //   {
-        //     openDiningHalls.map(hall => (
-        //       <DiningHall
-        //         key={hall._id}
-        //         name={hall.name}
-        //         isOpen={true}
-        //         closeTime={ getClosingTime(hall) }
-        //         nextOpenTime={null}
-        //       />
-        //     ))
-        //   }
-        // </View>
-        // <View style={styles.subsection}>
-        //   <Text style={styles.subheading}>Food Trucks</Text>
-          // {
-          //   foodTrucks.map(truck => (
-          //     <FoodTruck 
-          //       key={truck._id} 
-          //       truck={truck} 
-          //     />
-          //   ))
-          // }
-        // </View>
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
-          <Text style={styles.title}>menus</Text>
+          <Text style={styles.title}>MENUS</Text>
           <SearchBar
-            placeholder="search for a dining hall or truck..."
+            placeholder="Search for a dining hall or truck..."
             onChangeText={searchFunc}
             value={searchValue}
             round
@@ -369,11 +343,11 @@ useEffect(() => {
             }
           ] : [
             {
-              title: 'open now',
+              title: 'Open Now',
               data: [{ id: 'open' }]
             },
             {
-              title: 'closed',
+              title: 'Closed',
               data: [{ id: 'closed' }]
             }
           ]}
@@ -399,7 +373,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   sectionListContent: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 0,
   },
   section: {
     width: '100%',
@@ -418,15 +392,16 @@ const styles = StyleSheet.create({
     fontFamily: 'perpetua-bold-italic'
   },
   heading: {
-    fontWeight: '500',
-    fontSize: 25,
-    fontFamily: 'Gill-Sans'
+    fontWeight: '700',
+    fontSize: 30,
+    fontFamily: 'perpetua-bold'
   },
   subheading: {
     width: '100%',
-    fontSize: 25,
+    fontSize: 23,
     color: 'rgba(30, 55, 101, 1)',
-    fontFamily: 'Perpetua-MT-Regular',
+    fontFamily: 'Gill-Sans',
+    fontWeight: '600',
     paddingLeft: 20,
     marginTop: 5,
   },

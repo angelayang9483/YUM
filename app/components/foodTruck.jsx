@@ -70,7 +70,7 @@ const FoodTruck = ({
         <FontAwesome 
           name={isFavorited ? "heart" : "heart-o"}
           size={20} 
-          color="white" 
+          color={'rgba(60, 60, 60, 1)'}
         />
       </Pressable>
     </View>
@@ -81,7 +81,7 @@ export default FoodTruck;
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#467FB6',
+    backgroundColor: 'rgba(169, 190, 209, 1)',
     width: '100%',
     borderRadius: 10,
     marginTop: 10,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   menusContainer: {
-    backgroundColor: 'rgba(119, 140, 159, 1)',
+    backgroundColor: 'rgba(169, 190, 209, 1)',
     width: '90%',
     borderRadius: 10,
     marginVertical: 5,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   otherContainer: {
-    backgroundColor: 'rgba(119, 140, 159, 1)',
+    backgroundColor: 'rgba(169, 190, 209, 1)',
     width: '100%',
     borderRadius: 10,
     marginVertical: 5,
@@ -127,16 +127,17 @@ const styles = StyleSheet.create({
   name: {
     color: 'rgba(30, 55, 101, 1)',
     fontSize: 18,
-    fontFamily: 'Gill-Sans-Bold'
+    fontFamily: 'Gill-Sans-Bold',
+    fontWeight: 500
   },
   time: {
-      color: 'rgba(248, 249, 252, 1)',
+    color: 'rgba(60, 60, 60, 1)',
     paddingTop: 2,
     fontSize: 17,
     fontFamily: 'perpetua-bold-italic'
   },
   likeCount: {
-      color: 'rgba(248, 249, 252, 1)',
+    color: 'rgba(60, 60, 60, 1)',
     paddingTop: 2,
     paddingRight: 5
   },

@@ -2,7 +2,6 @@ import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import FoodTruck from '../components/foodTruck.jsx';
-import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
@@ -121,7 +120,7 @@ export default function Tab() {
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.padding}></Text>
-        <Text style={styles.title}>popular today</Text>
+        <Text style={styles.title}>POPULAR TODAY</Text>
       </View>
 
       {/* <Line/> */}
@@ -152,12 +151,6 @@ export default function Tab() {
         <View style={styles.subsection}>
           {
           popularFoodTrucks.map((foodTruck, _idx) => (
-            // <FoodTruck
-            //   key={foodTruck._id}
-            //   name={foodTruck.name}
-            //   isLiked={true}
-            //   location={'favorites'}
-            // />
             <FoodTruck
               key={foodTruck._id + _idx}
               truck={foodTruck}
@@ -202,6 +195,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Perpetua-MT-Regular'
   },
   padding: {
-    paddingTop: 15
+    paddingTop: 40
   }
 });
