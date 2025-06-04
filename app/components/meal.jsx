@@ -68,12 +68,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#467FB6',
         width: '100%',
         borderRadius: 10,
-        marginTop: 10,
-        paddingHorizontal: 15,
-        height: 75,
+        marginVertical: 5,
+        paddingHorizontal: 20,
+        height: 70,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        alignSelf: 'center'
     },
     menusContainer: {
         backgroundColor: '#467FB6',
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flexDirection: 'column',
-        width: '80%',
+        width: '90%',
     },
     favoritesItem: {
         color: 'white',

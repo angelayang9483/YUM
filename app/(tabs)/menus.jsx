@@ -1,14 +1,12 @@
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { useEffect, useState, useContext } from 'react';
-import { SafeAreaView, SectionList, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, SafeAreaView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SearchBar } from 'react-native-elements';
 import DiningHall from '../components/diningHall.jsx';
-import Comment from '../components/comment.jsx';
-import Line from '../components/line.jsx';
+import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import FoodTruck from '../components/foodTruck.jsx';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -456,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   sectionListContent: {
-    paddingHorizontal: 15,
+    padding: 0
   },
   section: {
     width: '100%',

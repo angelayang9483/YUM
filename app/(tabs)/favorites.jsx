@@ -2,9 +2,9 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import FoodTruck from '../components/foodTruck.jsx';
 import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
-import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
