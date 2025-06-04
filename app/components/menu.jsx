@@ -2,19 +2,19 @@ import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    Modal,
-    PanResponder,
-    Pressable,
-    SafeAreaView,
-    SectionList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Modal,
+  PanResponder,
+  Pressable,
+  SafeAreaView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
@@ -153,15 +153,23 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const handleAddComment = async () => {
     if (comment.trim() === '') return;
     try {
-      await axios.post(`${url}/api/comments`, {
+      const response = await axios.post(`${url}/api/comments`, {
         content: comment,
         diningHallName: diningHallId,
         userId: user.userId
       });
-      const commentId = response.data._id;
+      
+      const commentId = response.data.comment._id;
+      console.log("Response looks like this: ", response)
+      //console.log('Extracted commentId =', commentId);
+      if (!commentId) {
+        console.warn('commentId is undefined; aborting link step.');
+        return;
+      }
       await axios.post(`${url}/api/comments/${commentId}/link`, {
         userId: user.userId
       });
+      console.log("Posted to comments")
       setComment('');
     } catch (err) {
       if (err.response) {

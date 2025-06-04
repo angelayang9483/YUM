@@ -33,7 +33,7 @@ router.post('/:id/favorite-meal', userController.favoriteMeal);
 router.delete('/:id/favorite-meal', userController.unfavoriteMeal);
 
 // get favorite meals
-router.get('/:id/favorite-meal', userController.getFavoriteMeals)
+router.get('/:userId/favorite-meals', userController.getFavoriteMeals)
 
 // GET favorite trucks
 router.get('/:userId/favorite-trucks', userController.getFavoriteFoodTrucks);
