@@ -43,17 +43,18 @@ export default DiningHall;
 const styles = StyleSheet.create({
     cardContainer: {
       backgroundColor: '#467FB6',
-      width: '100%',
+      width: '90%',
       borderRadius: 10,
-      marginTop: 10,
-      paddingHorizontal: 15,
+      marginVertical: 5,
+      paddingHorizontal: 20,
       height: 70,
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      alignSelf: 'center',
     },
     cardContent: {
-      flex: 1,   // take up all available space except the heart
+      flex: 1,
       height: '100%',
       justifyContent: 'center',
     },
