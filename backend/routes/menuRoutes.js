@@ -11,8 +11,8 @@ router.get('/today', menuController.getMenusToday);
 // GET menus by dining hall
 router.get('/:diningHall', menuController.getMenusByDiningHall);
 
-// GET menus by dining hall and today
-router.get('/:diningHall/today', menuController.getMenusByDiningHallToday);
+// GET menu by dining hall and today
+router.get('/:diningHall/today', menuController.getMenuByDiningHallToday);
 
 // POST new menu
 router.post('/', menuController.createMenu);
