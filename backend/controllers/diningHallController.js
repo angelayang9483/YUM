@@ -27,7 +27,14 @@ const getDiningHalls = async (req, res) => {
 const getDiningHallById = async (req, res) => {
   try {
     console.log("Fetching dining hall with ID:", req.params.id);
-    const diningHall = await DiningHall.findById(req.params.id);
+    const diningHall = await DiningHall.findById(req.params.id)
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'user',
+          select: 'username'
+        }
+      });
 
     if (!diningHall) {
       console.log("Dining hall not found for ID:", req.params.id);
