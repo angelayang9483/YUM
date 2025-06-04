@@ -4,13 +4,12 @@ const DiningHall = require('../models/DiningHallModel');
 
 // create comment
 const createComment = async (req, res) => {
-  const { content, diningHallName, userId } = req.body;
+  const { content, diningHallId, userId } = req.body;
 
   try {
-    const diningHall = await DiningHall.findOne({ name: diningHallName });
     const comment = new Comment({
       content,
-      diningHall: diningHall._id,
+      diningHall: diningHallId,
       user: userId
     });
 
@@ -20,6 +19,27 @@ const createComment = async (req, res) => {
   } catch (error) {
     console.error("Error creating comment:", error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+const linkCommentToUser = async (req, res) => {
+  const { userId } = req.body;
+  const { commentId } = req.params;
+  console.log("LINKING COMMENT TO USER: ", userId, commentId);
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.comments.push(commentId);
+  } catch (err) {
+    console.error("Could not add comment to user:", err);
   }
 };
 
@@ -111,5 +131,6 @@ module.exports = {
   createComment,
   getCommentById,
   deleteComment,
-  likeComment
+  likeComment,
+  linkCommentToUser
 };
