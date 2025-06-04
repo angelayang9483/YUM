@@ -22,7 +22,7 @@ const getFoodTrucksHereToday = async (req, res) => {
   try {
     const foodTrucks = await fetchAllFoodTrucks();
     const hereToday = foodTrucks.filter(truck => truck.hereToday === true);
-
+    
     res.status(200).json(hereToday);
   } catch (error) {
     console.error('Error fetching food trucks here today:', error);
@@ -93,7 +93,7 @@ const favoriteFoodTruck = async (req, res) => {
 
 const getPopularFoodTrucks = async(req, res) => {
   try {
-    const foodTrucks = await FoodTruck.find({favoriteCount: { $gt:20 }});
+    const foodTrucks = await FoodTruck.find({favoritesCount: { $gt:20 }});
     return res.status(200).json(foodTrucks);
   }
   catch (err) {

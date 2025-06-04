@@ -519,11 +519,11 @@ class WebScrapeController {
               close = "12:00 a.m.";
             }
             
-            hoursArray = [{
+            hoursArray.push({
               label: label,
-              open: open,
+              open:  open,
               close: close
-            }];
+            });
           }
           
           allFoodTruckUpdates.push(

@@ -32,6 +32,12 @@ router.post('/:id/favorite-meal', userController.favoriteMeal);
 // unfavorite a meal
 router.delete('/:id/favorite-meal', userController.unfavoriteMeal);
 
+// favorite a truck
+router.post('/:id/favorite-truck', userController.favoriteFoodTruck);
+
+// unfavorite a truck
+router.delete('/:id/favorite-truck', userController.unfavoriteFoodTruck);
+
 // get favorite meals
 router.get('/:userId/favorite-meals', userController.getFavoriteMeals)
 

@@ -76,9 +76,7 @@ const createMeal = async (req, res) => {
 
 const getPopularMeals = async(req, res) => {
   try {
-    console.log('Fetching popular meals...');
-    console.log('Meal model:', Meal);
-    const popularMeals = await Meal.find({favoritesCount: { $gt:20 }});
+    const popularMeals = await Meal.find({favoritesCount: { $gt:20 }}).limit(20).sort({favoritesCount: -1});
     return res.status(200).json(popularMeals);
   }
   catch (err) {

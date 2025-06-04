@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { initializeMealAndTruckListeners } from '../utils/helpers.js';
 import Meal from './meal.jsx';
 import { useFonts } from 'expo-font';
 
@@ -34,7 +35,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
-
   const [fontsLoaded] = useFonts({
     'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
     'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
@@ -44,34 +44,47 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
   });
 
-  const fetchFavoriteMeals = (mealIdToUpdate, newCount) => {
-    if (mealIdToUpdate && typeof newCount !== 'undefined') {
+  const fetchFavoriteMeals = (meal, adding) => {
+    if (meal) {
         setMenu(prevMenu => 
           prevMenu.map(period => ({
             ...period,
             data: period.data.map(station => ({
               ...station,
-              data: station.data.map(meal => 
-                meal._id === mealIdToUpdate 
-                  ? { ...meal, favoritesCount: newCount } 
-                  : meal
+              data: station.data.map(mealToUpdate => 
+                mealToUpdate._id === meal._id 
+                  ? meal
+                  : mealToUpdate
               ),
             })),
           }))
         );
+        if(!adding) {
+            setFavoriteMeals(prev => prev.filter(a => a._id !== meal._id));
+        } else {
+            setFavoriteMeals(prev => [...prev, meal]);
+        }
       }
     if (!user) {
       setFavoriteMeals([]);
       return;
     }
-    axios
+    if (!meal) {
+      axios
         .get(`${url}/api/users/${user.userId}/favorite-meals`)
-        .then(res => setFavoriteMeals(res.data.favoriteMeals))
-        .catch(err => console.error(err));
+        .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+        .catch(err => {
+          console.error('Error fetching favorite meals:', err);
+          setFavoriteMeals([]);
+      });
+    }
   };
 
   useEffect(() => {
-    fetchFavoriteMeals();
+    const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, null, "MENU.JSX");
+    return () => {
+      cleanup();
+    };
   }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
@@ -160,15 +173,23 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const handleAddComment = async () => {
     if (comment.trim() === '') return;
     try {
-      await axios.post(`${url}/api/comments`, {
+      const response = await axios.post(`${url}/api/comments`, {
         content: comment,
         diningHallName: diningHallId,
         userId: user.userId
       });
-      const commentId = response.data._id;
+      
+      const commentId = response.data.comment._id;
+      console.log("Response looks like this: ", response)
+      //console.log('Extracted commentId =', commentId);
+      if (!commentId) {
+        console.warn('commentId is undefined; aborting link step.');
+        return;
+      }
       await axios.post(`${url}/api/comments/${commentId}/link`, {
         userId: user.userId
       });
+      console.log("Posted to comments")
       setComment('');
     } catch (err) {
       if (err.response) {
@@ -261,10 +282,9 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           id={item._id}
                           name={item.name}
                           diningHall={item.diningHall}
-                          isLiked={favoriteMeals.includes(item._id)}
+                          isFavorited={favoriteMeals.some(a => a._id === item._id)}
                           location={'menu'}
                           favoritesCount={item.favoritesCount}
-                          onLikeChange={fetchFavoriteMeals}
                         />
                       )}
                       contentContainerStyle={styles.sectionListContent}

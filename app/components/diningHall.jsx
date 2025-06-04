@@ -15,8 +15,7 @@ const DiningHall = (props) => {
       'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
     });
 
-    const handleDiningHallPress = (id) => {
-        setSelectedDiningHall(id);
+    const handleDiningHallPress = () => {
         setMenuVisible(true);
     };
 
