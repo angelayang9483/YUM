@@ -46,7 +46,6 @@ export default function Tab() {
       const response = await axios.get(`${url}/api/users/${user.userId}`);
       setFavorites(response.data.favorites || []);
       setFavoriteFoodTrucks(response.data.favoriteFoodTrucks || []);
-      console.log("Fetched Favorites:", response.data.favorites);
 
     } catch (error) {
       console.error(error);
@@ -75,6 +74,9 @@ export default function Tab() {
     }
   }, [favorites]);
 
+  const hereTodayMeals = favoriteMeals.filter(meal => meal.hereToday);
+  const notHereTodayMeals = favoriteMeals.filter(meal => !meal.hereToday);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
@@ -98,7 +100,7 @@ export default function Tab() {
               location={'favorites'}
             />
           ))
-        }
+          }
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
