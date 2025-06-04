@@ -80,8 +80,8 @@ const getPopularMeals = async(req, res) => {
     return res.status(200).json(popularMeals);
   }
   catch (err) {
-  console.error('Error fetching popular meals:', err);
-  return res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching popular meals:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
