@@ -181,6 +181,38 @@ class WebScrapeController {
       throw error;
     }
   }
+
+  static async checkIfDatabaseCurrent() {
+    const now = new Date();
+    const today = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+        
+    const tomorrow = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+    const menus = await MenuModel.find({
+      date: {
+        $gte: today,
+        $lt: tomorrow
+      }
+    }).lean();
+    const hallsWithMenu = new Set(
+      menus.map((m) => m.diningHallId.toString())
+    );
+    const allHalls = await DiningHallModel.find().lean();
+    const hallsMissingMenu = allHalls.filter(
+      (h) => !hallsWithMenu.has(h._id.toString())
+    );
+    if (hallsMissingMenu.length > 0) {
+      return false;
+    }
+    return true;
+  }
   
   /**
    * Scrape menu for a specific dining hall
@@ -204,6 +236,11 @@ class WebScrapeController {
   static async updateMenuDatabase() {
     // Prevent concurrent scraping
     if (WebScrapeController.isScrapingInProgress) {
+      return;
+    }
+
+    // Check if the database is current
+    if (await this.checkIfDatabaseCurrent()) {
       return;
     }
     
@@ -325,7 +362,8 @@ class WebScrapeController {
           {
             name: cleanDiningHallName,
             diningHallId: diningHall._id,
-            mealPeriods: mealPeriods
+            mealPeriods: mealPeriods,
+            date: new Date()
           },
           { upsert: true, new: true }
         );
