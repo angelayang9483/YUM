@@ -55,9 +55,12 @@ const Menu = ({ visible, onClose, diningHallId }) => {
       return;
     }
     axios
-        .get(`${url}/api/users/${user.userId}/favorite-meals`)
-        .then(res => setFavoriteMeals(res.data.favoriteMeals))
-        .catch(err => console.error(err));
+      .get(`${url}/api/users/${user.userId}/favorite-meal`)
+      .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+      .catch(err => {
+        console.error('Error fetching favorite meals:', err);
+        setFavoriteMeals([]);
+      });
   };
 
   useEffect(() => {
@@ -150,15 +153,23 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const handleAddComment = async () => {
     if (comment.trim() === '') return;
     try {
-      await axios.post(`${url}/api/comments`, {
+      const response = await axios.post(`${url}/api/comments`, {
         content: comment,
         diningHallName: diningHallId,
         userId: user.userId
       });
-      const commentId = response.data._id;
+      
+      const commentId = response.data.comment._id;
+      console.log("Response looks like this: ", response)
+      //console.log('Extracted commentId =', commentId);
+      if (!commentId) {
+        console.warn('commentId is undefined; aborting link step.');
+        return;
+      }
       await axios.post(`${url}/api/comments/${commentId}/link`, {
         userId: user.userId
       });
+      console.log("Posted to comments")
       setComment('');
     } catch (err) {
       if (err.response) {

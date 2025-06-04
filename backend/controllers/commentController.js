@@ -4,18 +4,22 @@ const DiningHall = require('../models/DiningHallModel');
 
 // create comment
 const createComment = async (req, res) => {
-  const { content, diningHallId, userId } = req.body;
+  const { content, diningHallName: diningHallId, userId } = req.body;
 
   try {
+    const diningHall = await DiningHall.findById(diningHallId);
+    if (!diningHall) {
+      return res.status(404).json({ error: "Dining hall not found" });
+    }
+
     const comment = new Comment({
       content,
       diningHall: diningHallId,
       user: userId
     });
 
-    await comment.save();
-
-    res.status(201).json({ success: true, comment });
+    const savedComment = await comment.save();
+    res.status(201).json({ success: true, comment: savedComment });
   } catch (error) {
     console.error("Error creating comment:", error);
     res.status(500).json({ error: "Server error" });
@@ -25,7 +29,6 @@ const createComment = async (req, res) => {
 const linkCommentToUser = async (req, res) => {
   const { userId } = req.body;
   const { commentId } = req.params;
-  console.log("LINKING COMMENT TO USER: ", userId, commentId);
 
   try {
     const comment = await Comment.findById(commentId);
@@ -37,9 +40,19 @@ const linkCommentToUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    if (!user.comments) {
+      user.comments = [];
+    }
+    
     user.comments.push(commentId);
+    await user.save();
+    await comment.save();
+
+    res.status(200).json({ success: true, message: "Comment linked to user" });
   } catch (err) {
     console.error("Could not add comment to user:", err);
+    res.status(500).json({ error: "Failed to link comment to user" });
   }
 };
 
