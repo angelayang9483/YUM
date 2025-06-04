@@ -30,6 +30,15 @@ app.use('/api/dininghalls', diningHallRoutes);
 const commentRoutes = require('./routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
 
+const mealRoutes = require('./routes/mealRoutes');
+app.use('/api/meals', mealRoutes);
+
+const menuRoutes = require('./routes/menuRoutes');
+app.use('/api/menus', menuRoutes);
+
+const scrapeFoodTrucksRoutes = require('./routes/scrapeFoodTrucksRoutes');
+app.use('/api/scrapeFoodTrucks', scrapeFoodTrucksRoutes);
+
 const foodTruckRoutes = require('./routes/foodTruckRoutes');
 app.use('/api/foodtrucks', foodTruckRoutes);
 

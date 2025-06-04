@@ -273,6 +273,7 @@ export default function Tab() {
             <View key={hall._id}>
               <DiningHall
                 style={styles.diningHall}
+                id={hall._id}
                 name={hall.name}
                 isOpen={isDiningHallOpen(hall, mealPeriod, now)}
                 closeTime={isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[mealPeriodDict[mealPeriod]]?.close : null}
@@ -292,6 +293,7 @@ export default function Tab() {
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
+              id={hall._id}
               name={hall.name}
               isOpen={true}
               closeTime={hall.hours[mealPeriodDict[mealPeriod]]?.close}
@@ -301,6 +303,7 @@ export default function Tab() {
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
+              id={hall._id}
               name={hall.name}
               isOpen={false}
               nextOpenTime={hall.hours[getNextMealPeriodIndex(now, hall)]?.open}

@@ -1,18 +1,56 @@
 // Menu.jsx
-import React, { useEffect, useRef } from 'react';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    Pressable,
+    SectionList,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
+import config from '../config';
+import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
 
-const Menu = ({ visible, onClose, todayMeals }) => {
+const Menu = ({ visible, onClose, diningHallId }) => {
+    const url = config.BASE_URL;
+    const [menu, setMenu] = useState([]);
+    const [selectedPeriod, setSelectedPeriod] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchMenu = async () => {
+            try {
+                const response = await axios.get(`${url}/api/menus/${diningHallId}/today`);
+                console.log("raw menu response:", response.data);
+                const newMenu = response.data.mealPeriods.map(period => ({
+                    title: period.name,
+                    data: period.stations.map(station => ({
+                      title: station.name,
+                      data: station.meals
+                    }))
+                  }));
+                setMenu(newMenu);
+                if (newMenu.length > 0) {
+                    setSelectedPeriod(newMenu[0]);
+                } else {
+                    setError('No menu found');
+                }
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching menu:', err);
+                setError('Failed to fetch menu');
+                setLoading(false);
+            }
+        };
+        fetchMenu();
+    }, [diningHallId]);
+    
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
@@ -31,6 +69,7 @@ const Menu = ({ visible, onClose, todayMeals }) => {
     }
   }, [visible]);
 
+  
   return (
     <Animated.View
       style={[
@@ -38,25 +77,69 @@ const Menu = ({ visible, onClose, todayMeals }) => {
         { transform: [{ translateY: slideAnim }] },
       ]}
     >
-      {(!meals || meals.length === 0) && (
-        <Text style={styles.text}>No meals available for today.</Text>
-      )}
-      {meals && meals.length > 0 && (
-        <ScrollView style={styles.mealsList}>
-          {meals.map((mealItem, index) => (
-            <View key={index} style={styles.mealContainer}>
-              <View style={styles.infoContainer}>
-                <Text style={styles.mealName}>{mealItem.name}</Text>
-                <Text style={styles.mealDesc}>{mealItem.description}</Text>
-              </View>
-              <Text style={styles.mealPrice}>
-                ${mealItem.price.toFixed(2)}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      )}
+      {loading && (
+        <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    )}
+    {!loading && error && (
+      <View style={styles.center}>
+        <Text>{error}</Text>
+      </View>
+    )}
+    {!loading && !error && (
+        <View>
+        <View style={styles.buttonsRow}>
+        {menu.map((p, idx) => (
+          <View key={p.title} style={styles.buttonWrapper}>
+            <TouchableOpacity
+                key={p.title}
+                activeOpacity={0.7}
+                onPress={() => setSelectedPeriod(p)}
+                style={[
+                styles.segmentButton,
+                p.title === selectedPeriod.title ? styles.segmentButtonSelected : styles.segmentButtonUnselected,
 
+                idx > 0 && { borderLeftWidth: 1, borderLeftColor: '#d1d1d6' },
+                ]}
+            >
+                <Text
+                style={[
+                    styles.segmentText,
+                    p.title === selectedPeriod.title ? styles.segmentTextSelected : styles.segmentTextUnselected,
+                ]}
+                >
+                {p.title}
+                </Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        </View>
+        {!selectedPeriod && (
+          <View style={styles.center}>
+            <Text>Please select a meal period</Text>
+          </View>
+        )}
+        {selectedPeriod && (
+          <SectionList
+            sections={selectedPeriod.data}
+            keyExtractor={(item) => item._id}
+            renderSectionHeader={({ section }) => (
+              <Text style={styles.sectionHeader}>{section.title}</Text>
+            )}
+            renderItem={({ item }) => (
+              <Meal
+                  key={item._id}
+                  name={item.name}
+                  diningHall={item.diningHall}
+                  isLiked={true}
+                  location={'menu'}
+              />
+            )}
+          />
+        )}
+        </View>
+      )}
       <Pressable onPress={onClose} style={styles.closeButton}>
         <Text style={styles.closeText}>Close</Text>
       </Pressable>
@@ -65,87 +148,85 @@ const Menu = ({ visible, onClose, todayMeals }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: height / 2,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    padding: 20,
-    elevation: 5,
-    zIndex: 10,
-  },
-  text: {
-    fontSize: 18,
-    color: 'black',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  mealsList: {
-    flex: 1,
-    marginBottom: 12,
-  },
-  mealContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
-  },
-  infoContainer: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  mealName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  mealDesc: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#467FB6',
-    paddingVertical: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  closeText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-});
+    container: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      height: height,
+      backgroundColor: '#fff',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingTop: 16,
+      paddingHorizontal: 16,
+    },
+  
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  
+    buttonsRow: {
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#d1d1d6',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+        height: 36,
+      },
+    
+      segmentButton: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
 
-const todayMeals = [
-  {
-    name:        'Grilled Chicken Salad',
-    description: 'Fresh greens topped with grilled chicken, cherry tomatoes, and a balsamic vinaigrette.',
-    price:       12.99,
-  },
-  {
-    name:        'Veggie Burger',
-    description: 'Black bean patty with lettuce, tomato, avocado, and our special sauce.',
-    price:       10.50,
-  },
-  {
-    name:        'Spaghetti Carbonara',
-    description: 'Penne pasta in a creamy sauce with pancetta, parmesan, and cracked pepper.',
-    price:       14.75,
-  },
-  {
-    name:        'Smoothie Bowl',
-    description: 'Acai base topped with granola, banana, berries, and a honey drizzle.',
-    price:       8.00,
-  },
-];
+      segmentButtonSelected: {
+        backgroundColor: '#007AFF',
+      },
+
+      segmentButtonUnselected: {
+        backgroundColor: '#ffffff',
+      },
+    
+      segmentText: {
+        fontSize: 14,
+        fontWeight: '500',
+      },
+
+      segmentTextSelected: {
+        color: '#ffffff',
+      },
+
+      segmentTextUnselected: {
+        color: '#007AFF',
+      },
+
+    buttonWrapper: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+  
+    sectionHeader: {
+      fontWeight: '600',
+      fontSize: 18,
+      color: '#222',
+      backgroundColor: '#f6f6f6',
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+    },
+  
+    closeButton: {
+      alignSelf: 'center',
+      marginTop: 16,
+      marginBottom: 32,
+    },
+    closeText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#007AFF',
+    },
+  });
 
 export default Menu;

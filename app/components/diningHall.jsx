@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Menu from './menu.jsx';
 
 const DiningHall = (props) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [selectedDiningHall, setSelectedDiningHall] = useState('');
 
-    const handleDiningHallPress = (name) => {
-        setSelectedDiningHall(name);
+    const handleDiningHallPress = (id) => {
+        setSelectedDiningHall(id);
         setMenuVisible(true);
     };
 
@@ -17,7 +17,8 @@ const DiningHall = (props) => {
             style={styles.cardContent} 
             onPress={() => {
                 console.log('Navigate to detail page');
-                handleDiningHallPress('Bruin Plate');
+                console.log(props.id);
+                handleDiningHallPress(props.id);
             }}
             >
             <View style={styles.nameTimeContainer}>
@@ -30,7 +31,7 @@ const DiningHall = (props) => {
             <Menu
                 visible={menuVisible}
                 onClose={() => setMenuVisible(false)}
-                content={`Menu for ${selectedDiningHall}`}
+                diningHallId={props.id}
             />
             )}
         </View>
