@@ -42,6 +42,10 @@ app.use('/api/scrapeFoodTrucks', scrapeFoodTrucksRoutes);
 const foodTruckRoutes = require('./routes/foodTruckRoutes');
 app.use('/api/foodtrucks', foodTruckRoutes);
 
+//added to reset the backend
+const scrapeMenusRoutes = require('./routes/scrapeMenus');
+app.use('/api/scrape/menus', scrapeMenusRoutes);
+
 // Import WebScrapeController
 const WebScrapeController = require('./controllers/WebScrapeController');
 
@@ -91,7 +95,6 @@ function scheduleDailyRefresh() {
     }, 24 * 60 * 60 * 1000);
   }, initialDelay);
 }
-
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
 .then(async () => {
@@ -117,3 +120,4 @@ mongoose.connect(process.env.MONGODB_URI)
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })
 .catch((err) => console.error(err));
+

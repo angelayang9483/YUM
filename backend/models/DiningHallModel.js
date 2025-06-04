@@ -39,7 +39,11 @@ const diningHallSchema = new Schema({
             }
         ],
         default: []
-    }
+    },
+    comments: [{
+            type: Schema.Types.ObjectId,
+            ref: "Comment"
+        }]
 }, {
     timestamps: true,  // Add automatic createdAt/updatedAt
     versionKey: false  // Remove __v field

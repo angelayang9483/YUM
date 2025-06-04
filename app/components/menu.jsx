@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
+import { useFonts } from 'expo-font';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,7 +10,7 @@ import {
   PanResponder,
   Pressable,
   SafeAreaView,
-  SectionList,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,8 +19,8 @@ import {
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import Comment from './comment.jsx';
 import Meal from './meal.jsx';
-import { useFonts } from 'expo-font';
 
 const { height } = Dimensions.get('window');
 const SNAP_POINT = height * 0.1;
@@ -31,6 +32,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [comment, setComment] = useState('');
+  const [diningHall, setDiningHall] = useState(null);
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
@@ -157,20 +159,73 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     }
   }, [visible]);
 
+  useEffect(() => {
+    const fetchDiningHall = async () => {
+      try {
+        const response = await axios.get(`${url}/api/diningHalls/${diningHallId}`);
+        setDiningHall(response.data);
+      } catch (err) {
+        console.error('Error fetching dining hall:', err);
+      }
+    };
+
+    if (visible) {
+      fetchDiningHall();
+    }
+  }, [diningHallId, visible]);
+
   const handleAddComment = async () => {
     if (comment.trim() === '') return;
     try {
-      await axios.post(`${url}/api/comments`, {
+      console.log('Starting comment creation with:', {
         content: comment,
         diningHallName: diningHallId,
         userId: user.userId
       });
-      const commentId = response.data._id;
+
+      const response = await axios.post(`${url}/api/comments`, {
+        content: comment,
+        diningHallName: diningHallId,
+        userId: user.userId
+      });
+      
+      console.log("Full response from comment creation:", response);
+      
+      const commentId = response.data.comment._id;
+      console.log("Response looks like this: ", response);
+      console.log('Extracted commentId =', commentId);
+      
+      if (!commentId) {
+        console.warn('commentId is undefined; aborting link step.');
+        return;
+      }
+
+      console.log('Attempting to link comment to user...');
       await axios.post(`${url}/api/comments/${commentId}/link`, {
         userId: user.userId
       });
+
+      console.log('Successfully linked to user, now linking to dining hall...');
+      await axios.post(`${url}/api/comments/${commentId}/toDiningHall`, {
+        diningHallId: diningHallId
+      });
+
+      console.log("Posted to comments");
+      console.log('About to clear comment input...');
       setComment('');
+      console.log('Comment input cleared');
+
+      // Refresh dining hall data to show new comment
+      const diningresponse = await axios.get(`${url}/api/diningHalls/${diningHallId}`);
+      setDiningHall(diningresponse.data);
     } catch (err) {
+      console.error('Error in handleAddComment:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        stack: err.stack
+      });
+      
       if (err.response) {
         console.log("Server responded with:", err.response.status, err.response.data);
       } else {
@@ -191,6 +246,8 @@ const Menu = ({ visible, onClose, diningHallId }) => {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.header} {...panResponder.panHandlers}>
             <View style={styles.grabber} />
+          </View>
+          <View style={styles.header}>
             <Text style={styles.title}>menu</Text>
           </View>
 
@@ -248,27 +305,42 @@ const Menu = ({ visible, onClose, diningHallId }) => {
 
                 {selectedPeriod && (
                   <View style={styles.listContainer}>
-                    <SectionList
+                    <ScrollView
                       showsVerticalScrollIndicator={false}
-                      sections={selectedPeriod.data}
-                      keyExtractor={(item, idx) => item._id + idx}
-                      renderSectionHeader={({ section }) => (
-                        <Text style={styles.sectionHeader}>{section.title.toLowerCase()}</Text>
-                      )}
-                      renderItem={({ item, idx }) => (
-                        <Meal
-                          key={item._id + idx}
-                          id={item._id}
-                          name={item.name}
-                          diningHall={item.diningHall}
-                          isLiked={favoriteMeals.includes(item._id)}
-                          location={'menu'}
-                          favoritesCount={item.favoritesCount}
-                          onLikeChange={fetchFavoriteMeals}
-                        />
-                      )}
                       contentContainerStyle={styles.sectionListContent}
-                    />
+                    >
+                      {selectedPeriod.data.map((section, sectionIndex) => (
+                        <View key={section.title + sectionIndex}>
+                          <Text style={styles.sectionHeader}>{section.title.toLowerCase()}</Text>
+                          {section.data.map((item, idx) => (
+                            <Meal
+                              key={item._id + idx}
+                              id={item._id}
+                              name={item.name}
+                              diningHall={item.diningHall}
+                              isLiked={favoriteMeals.includes(item._id)}
+                              location={'menu'}
+                              favoritesCount={item.favoritesCount}
+                              onLikeChange={fetchFavoriteMeals}
+                            />
+                          ))}
+                        </View>
+                      ))}
+                      <View style={styles.header}>
+                        <Text style={styles.title}>comments</Text>
+                      </View>
+                      <View style={styles.commentsSection}>
+                        {diningHall?.comments?.map((comment, index) => (
+                          <Comment
+                            key={comment._id || index}
+                            comment={comment}
+                          />
+                        ))}
+                        {(!diningHall?.comments || diningHall.comments.length === 0) && (
+                          <Text style={styles.noCommentsText}>No comments yet</Text>
+                        )}
+                      </View>
+                    </ScrollView>
                   </View>
                 )}
               </View>
@@ -323,6 +395,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     paddingHorizontal: 16,
+    paddingTop: 12,
   },
   grabber: {
     width: 40,
@@ -419,6 +492,16 @@ const styles = StyleSheet.create({
   sendButton: {
     padding: 8,
     marginLeft: 8,
+  },
+  commentsSection: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  noCommentsText: {
+    textAlign: 'center',
+    color: '#666',
+    padding: 20,
+    fontStyle: 'italic',
   },
 });
 

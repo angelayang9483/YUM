@@ -17,4 +17,7 @@ router.post('/:commentId/like', commentController.likeComment);
 //link comment to user
 router.post('/:commentId/link', commentController.linkCommentToUser);
 
+//link comment to dining hall
+router.post('/:commentId/toDiningHall', commentController.linkCommentToDiningHall);
+
 module.exports = router;
