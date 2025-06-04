@@ -1,6 +1,6 @@
 // Menu.jsx
 import axios from 'axios';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import config from '../config';
+import { AuthContext } from '../context/AuthContext';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
@@ -25,6 +26,19 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { user } = useContext(AuthContext);
+  const [favoriteMeals, setFavoriteMeals] = useState([]);
+
+    useEffect(() => {
+    if (!user) return;
+    
+    axios
+        .get(`${url}/api/users/${user.userId}/favorite-meal`)
+        .then(res => setFavoriteMeals(res.data.favoriteMeals))
+        .catch(err => console.error(err));
+
+    }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const pan = useRef(new Animated.Value(0)).current;
@@ -63,7 +77,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        console.log('Fetching menu for diningHallId:', diningHallId);
         const response = await axios.get(`${url}/api/menus/${diningHallId}`);
         const periodList = Object.values(response.data.mealPeriods);
         const newMenu = periodList.map((period) => ({
@@ -186,9 +199,10 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                 renderItem={({ item, idx }) => (
                   <Meal
                     key={item._id + idx}
+                    id={item._id}
                     name={item.name}
                     diningHall={item.diningHall}
-                    isLiked={true}
+                    isLiked={favoriteMeals.includes(item._id)}
                     location={'menu'}
                   />
                 )}

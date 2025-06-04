@@ -1,6 +1,7 @@
 const User = require('../models/UserModel');
 const Comment = require('../models/CommentModel');
 const jwt = require('jsonwebtoken');
+const Meal = require('../models/MealModel');
 
 // Get all users
 const getAllUsers = async (req, res) => {
@@ -141,10 +142,10 @@ const checkUsernameAndPassword = async (req, res) => {
 
 const getLikedComments = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
     // Find the user and populate their liked comments with full comment data
-    const user = await User.findById(userId).populate('likedComments');
+    const user = await User.findById(id).populate('likedComments');
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -165,10 +166,10 @@ const getLikedComments = async (req, res) => {
 
 const getComments = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
     // Find the user and populate their liked comments with full comment data
-    const user = await User.findById(userId).populate('comments');
+    const user = await User.findById(id).populate('comments');
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -187,6 +188,89 @@ const getComments = async (req, res) => {
   }
 }
 
+const favoriteMeal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { mealId } = req.body;
+
+        const user = await User.findById(id);
+        const meal = await Meal.findById(mealId);
+
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (!meal) {
+            return res.status(404).json({ error: "Meal not found" });
+        }
+
+        user.favoriteMeals.push(mealId);
+        await user.save();
+
+        meal.favoritesCount += 1;
+        await meal.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Meal favorited successfully"
+        });
+    } catch (error) {
+        console.error("Favorite meal error:", error);
+        res.status(500).json({ error: "Server error occurred" });
+    }
+}
+
+
+const unfavoriteMeal = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { mealId } = req.body;
+
+      const user = await User.findById(id);
+      const meal = await Meal.findById(mealId);
+
+      if (!user) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!meal) {
+          return res.status(404).json({ error: "Meal not found" });
+      }
+
+      user.favoriteMeals.pull(mealId);
+      await user.save();
+
+      meal.favoritesCount -= 1;
+      await meal.save();
+
+      res.status(200).json({
+          success: true,
+          message: "Meal unfavorited successfully"
+      });
+  } catch (error) {
+      console.error("Unfavorite meal error:", error);
+      res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
+const getFavoriteMeals = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.status(200).json({
+            success: true,
+            favoriteMeals: user.favoriteMeals,
+            count: user.favoriteMeals.length
+        });
+    } catch (error) {
+        console.error("Error getting favorite meals:", error);
+        res.status(500).json({ error: "Server error occurred" });
+    }
+}
 
 module.exports = {
   getAllUsers,
@@ -196,5 +280,8 @@ module.exports = {
   checkUsernameAndPassword,
   // likeComment,
   getLikedComments,
-  getComments
+  getComments,
+  favoriteMeal,
+  unfavoriteMeal,
+  getFavoriteMeals
 };
