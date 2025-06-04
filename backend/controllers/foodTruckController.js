@@ -91,7 +91,7 @@ const favoriteFoodTruck = async (req, res) => {
   }
 };
 
-const popularFoodTrucks = async(req, res) => {
+const getPopularFoodTrucks = async(req, res) => {
   try {
     const foodTrucks = await FoodTruck.find({favoritesCount: { $gt:20 }});
     return res.status(200).json(foodTrucks);
