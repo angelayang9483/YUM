@@ -18,45 +18,30 @@ export default function Tab() {
   const [foodTrucks, setFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
-  const [time, setTime] = useState('');
-  const [mealPeriod, setMealPeriod] = useState('none');
+  const [now, setNow] = useState(new Date());
   const [searchValue, setSearchValue] = useState('');
   const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
   const [filteredHalls, setFilteredHalls] = useState([]);
+  const [filteredFoodTrucks, setFilteredFoodTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isScrapingCheckDone, setIsScrapingCheckDone] = useState(false);
   const [isInitialDataFetchAttemptDone, setIsInitialDataFetchAttemptDone] = useState(false);
+  const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
 
-  const mealPeriodDict = {
-    'Breakfast': 0,
-    'Lunch': 1,
-    'Dinner': 2,
-    'Extended Dinner': 3,
-  }
-  
-  const mealPeriods = ['Breakfast', 'Lunch', 'Dinner', 'Extended Dinner'];
 
-  function getNextMealPeriodIndex(now, hall) {
-    const nowHour = now.getHours();
-    
-    for (let i = 0; i < mealPeriods.length; i++) {
-      const period = mealPeriods[i];
-      const matchingHours = hall.hours.find(p => p.label.toLowerCase().trim() === period.toLowerCase().trim());
-      if (!matchingHours || !matchingHours.open) continue; // skip if this hall doesn't have that period
-    
-      let openHour = parseInt(matchingHours.open.split(':')[0], 10);
-      if (matchingHours.open.toUpperCase().includes('PM') && openHour !== 12) {
-        openHour += 12;
-      }
-  
-      if (openHour > nowHour) {
-        return i;
-      }
+  const fetchFavoriteFoodTrucks = async () => {
+    try {
+      const response = await axios.get(`${url}/api/users/${user.userId}/favorite-trucks`);
+      setFavoriteFoodTrucks(response.data.favoriteFoodTrucks);
+      console.log('favorite food trucks:', favoriteFoodTrucks);
+    } catch (err) {
+      console.error('Error fetching favorite food trucks:', err.message);
+      setError(err.message);
     }
-  
-    // if nothing found, loop back to the first meal period
-    return 0;
-  }
+  };
+  useEffect(() => {
+    fetchFavoriteFoodTrucks();
+  }, [user]);
 
   const getDiningHalls = async () => {
     try {
@@ -78,74 +63,241 @@ export default function Tab() {
     }
   };
 
-  const now = new Date();
+  function parseTime(timeString) {
+    if (!timeString) return null;
+    const parts = timeString.split(' ');
+    const timePart = parts[0];
+    const modifier = parts[1];
+  
+    let [hours, minutes] = timePart.split(':').map(Number);
+  
+    if (modifier) {
+      if (modifier.toLowerCase() === 'p.m.' && hours !== 12) {
+        hours += 12;
+      } else if (modifier.toLowerCase() === 'a.m.' && hours === 12) {
+        hours = 0;
+      }
+    }
+    return { hours, minutes };
+  }
   
 
-  function isDiningHallOpen(hall, mealPeriod, now) {
+  function isDiningHallOpen(hall, now) {
     if (!hall || !hall.hours || hall.hours.length === 0) {
       return false;
     }
   
-    const todayString = now.toDateString();
-    const hours = now.getHours();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
   
     for (const period of hall.hours) {
       if (!period.label || !period.open || !period.close) continue;
   
-      // Compare period label to mealPeriod
-      if (period.label.toLowerCase().trim() !== mealPeriod.toLowerCase().trim()) continue;
+      const openTime = parseTime(period.open);
+      const closeTime = parseTime(period.close);
   
-      const openTimeString = period.open.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
-      const closeTimeString = period.close.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
+      if (!openTime || !closeTime) continue;
   
-      let openTime = parseInt(openTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(openTimeString) && openTime !== 12) openTime += 12;
-  
-      let closeTime = parseInt(closeTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(closeTimeString) && closeTime !== 12) closeTime += 12;
-  
-      console.log('Checking: ${hall.name}, ${period.label}, ${openTime} - ${closeTime}');
-      console.log(hours);
-      console.log(closeTime);
-  
-      if (hours >= openTime && hours < closeTime) {
-        console.log('here');
-        return true;
+      if (closeTime.hours < openTime.hours || (closeTime.hours === openTime.hours && closeTime.minutes <= openTime.minutes)) {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) || 
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          return true;
+        }
+      } else {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) && 
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          return true;
+        }
       }
     }
   
     return false;
-  }  
-
-  function getNextOpenTime( hall ) {
-    let nextIndex = getNextMealPeriodIndex( hall );
-    let nextTime = hall.hours[ nextIndex ]
-    // console.log(`NEXT TIME FOR ${hall.name}: `, nextTime.open);
-    return (
-      nextTime?.open || 'N/A'
-    )
   }
 
-  function getClosingTime ( hall ) {
-    // check for extended dinner
-    if ( mealPeriod === "Dinner" && hall.hours[3].open ) {
-      return hall.hours[3].close;
+  function getClosingTime(hall, now) {
+    if (!hall || !hall.hours || hall.hours.length === 0) {
+      return 'N/A';
     }
-    else {
-      return (
-        hall.hours[
-          mealPeriod === 'none'
-            ? null
-            : (mealPeriodDict[mealPeriod]) % mealPeriods.length
-        ]?.close || 'N/A'
-      )
+  
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes(); // Get current minutes
+  
+    for (const period of hall.hours) {
+      if (!period.label || !period.open || !period.close) continue;
+
+      // Use parseTime for open and close times
+      const openTime = parseTime(period.open);
+      const closeTime = parseTime(period.close);
+
+      if (!openTime || !closeTime) continue; // Skip if parsing failed
+      
+      // Check if current time falls within this period
+      let isActivePeriod = false;
+      if (closeTime.hours < openTime.hours || (closeTime.hours === openTime.hours && closeTime.minutes <= openTime.minutes)) { // Overnight period
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) || 
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          isActivePeriod = true;
+        }
+      } else { // Same day period
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) && 
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          isActivePeriod = true;
+        }
+      }
+
+      if (isActivePeriod) {
+        return period.close; // Return the original closing time string of the active period
+      }
     }
+
+    return 'N/A'; // No currently active period found
+  }
+
+  function getNextOpenTime(hall, now) {
+    if (!hall || !hall.hours || !hall.hours.length === 0) {
+      return 'N/A';
+    }
+  
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes(); // Get current minutes
+    const currentTotalMinutes = currentHour * 60 + currentMinute; // Current time in minutes from midnight
+
+    let nextOpenTimeStr = 'N/A';
+    let minDiffToNextOpen = Infinity; // Stores the smallest difference in minutes to the next open time today
+    let earliestOpenTimeTodayStr = 'N/A';
+    let minMinutesForEarliestToday = Infinity; // Stores the earliest opening time of the day in minutes from midnight
+
+    for (const period of hall.hours) {
+      if (!period.label || !period.open || !period.close) continue;
+  
+      const openTime = parseTime(period.open);
+      if (!openTime) continue; // Skip if parsing failed
+
+      const periodOpenTotalMinutes = openTime.hours * 60 + openTime.minutes;
+
+      // Track the absolute earliest opening time for the day
+      if (periodOpenTotalMinutes < minMinutesForEarliestToday) {
+        minMinutesForEarliestToday = periodOpenTotalMinutes;
+        earliestOpenTimeTodayStr = period.open;
+      }
+
+      // If this period opens after the current time today
+      if (periodOpenTotalMinutes > currentTotalMinutes) {
+        const diff = periodOpenTotalMinutes - currentTotalMinutes;
+        if (diff < minDiffToNextOpen) {
+          minDiffToNextOpen = diff;
+          nextOpenTimeStr = period.open;
+        }
+      }
+    }
+  
+    // If no opening time found for later today, the next opening is the earliest one (implying next day)
+    if (nextOpenTimeStr === 'N/A' && earliestOpenTimeTodayStr !== 'N/A') {
+      return earliestOpenTimeTodayStr;
+    }
+  
+    return nextOpenTimeStr;
+  }
+
+  function isFoodTruckOpen(truck, now) {
+    if (!truck || !truck.hereToday || !truck.hours || !truck.hours.length) {
+      return false;
+    }
+  
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+  
+    for (const period of truck.hours) {
+      if (!period.open || !period.close) continue;
+      const openTime = parseTime(period.open);
+      const closeTime = parseTime(period.close);
+  
+      if (!openTime || !closeTime) continue;
+  
+      if (closeTime.hours < openTime.hours || (closeTime.hours === openTime.hours && closeTime.minutes <= openTime.minutes)) {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) ||
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          return true;
+        }
+      } else {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) &&
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          return true;
+        }
+      }
+    }
+  
+    return false;
+  }
+
+  function getClosingTruckTime(truck, now) {
+    if (!isFoodTruckOpen(truck, now)) return null;
+  
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+  
+    for (const period of truck.hours) {
+      if (!period.open || !period.close) continue;
+  
+      const openTime = parseTime(period.open);
+      const closeTime = parseTime(period.close);
+  
+      if (!openTime || !closeTime) continue;
+  
+      let isOpenInThisPeriod = false;
+      if (closeTime.hours < openTime.hours || (closeTime.hours === openTime.hours && closeTime.minutes <= openTime.minutes)) {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) ||
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          isOpenInThisPeriod = true;
+        }
+      } else {
+        if ((currentHour > openTime.hours || (currentHour === openTime.hours && currentMinute >= openTime.minutes)) &&
+            (currentHour < closeTime.hours || (currentHour === closeTime.hours && currentMinute < closeTime.minutes))) {
+          isOpenInThisPeriod = true;
+        }
+      }
+  
+      if (isOpenInThisPeriod) {
+        return period.close;
+      }
+    }
+    return null;
+  }
+
+  function getNextOpenTruckTime(truck, now) {
+    if (isFoodTruckOpen(truck, now) || !truck.hours || truck.hours.length === 0) return null;
+  
+    let nextOpenTimeStr = null;
+    let minDiff = Infinity;
+    const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+  
+    truck.hours.forEach(period => {
+      if (!period.open) return;
+  
+      const openTime = parseTime(period.open);
+      if (!openTime) return;
+  
+      let openTotalMinutes = openTime.hours * 60 + openTime.minutes;
+      let diff = openTotalMinutes - currentTotalMinutes;
+  
+      if (diff < 0) {
+        diff += 24 * 60;
+      }
+  
+      if (diff < minDiff) {
+        minDiff = diff;
+        nextOpenTimeStr = period.open;
+      }
+    });
+  
+    return nextOpenTimeStr;
   }
 
   // get the dining halls and food trucks
   const getFoodTrucks = async () => {
     const response = await axios.get(`${url}/api/foodtrucks/here`);
     console.log("Food truck data response: ", response.data);
+    console.log(response.data[0])
     setFoodTrucks(response.data);
   }
   
@@ -230,45 +382,16 @@ useEffect(() => {
   
   // supposed to run every 30 minutes
   useEffect(() => {
-    const hours = now.getHours();
-  
-    const timeString = now.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-    setTime(timeString);
-  
-    let currentPeriod = 'none';
-    if (hours >= 7 && hours < 10) currentPeriod = 'Breakfast';
-    else if (hours >= 11 && hours < 16) currentPeriod = 'Lunch';
-    else if (hours >= 17 && hours < 21) currentPeriod = 'Dinner';
-    else if (hours >= 21 && hours < 24) currentPeriod = 'Extended Dinner';
-  
-    setMealPeriod(currentPeriod);
+    setNow(new Date());
   
     const interval = setInterval(() => {
-      // re-run the time update logic every 30 minutes
-      const now = new Date();
-      const hours = now.getHours();
-  
-      const timeString = now.toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-      setTime(timeString);
-  
-      let currentPeriod = '';
-      if (hours >= 7 && hours < 10) currentPeriod = 'Breakfast';
-      else if (hours >= 11 && hours < 16) currentPeriod = 'Lunch';
-      else if (hours >= 17 && hours < 21) currentPeriod = 'Dinner';
-      else if (hours >= 21 && hours < 24) currentPeriod = 'Extended Dinner';
-  
-      setMealPeriod(currentPeriod);
+      setNow(new Date());
     }, 30 * 60 * 1000);
   
     return () => clearInterval(interval);
   }, []);
   
+
   // checks if dining halls are closed or open
   useEffect(() => {
     if (!diningHalls || diningHalls.length === 0) {
@@ -281,8 +404,7 @@ useEffect(() => {
     const closed = [];
   
     diningHalls.forEach(hall => {
-      console.log('Checking hall:', hall.name, 'for period:', mealPeriod);
-      if (isDiningHallOpen(hall, mealPeriod, now)) {
+      if (isDiningHallOpen(hall, now)) {
         open.push(hall);
       } else {
         closed.push(hall);
@@ -292,7 +414,23 @@ useEffect(() => {
     console.log('Open:', open);
     setOpenDiningHalls(open);
     setClosedDiningHalls(closed);
-  }, [diningHalls, mealPeriod]);
+
+
+    console.log('Processing food trucks:', foodTrucks)
+      const openFT = [];
+      const closedFT = [];
+      foodTrucks.forEach(truck => {
+        if (isFoodTruckOpen(truck, now)) {
+          openFT.push(truck);
+        } else {
+          closedFT.push(truck);
+        }
+      });
+      console.log('Open:', openFT);
+      setOpenFoodTrucks(openFT);
+      setClosedFoodTrucks(closedFT);
+ 
+  }, [diningHalls, foodTrucks, now]);
 
   
   const searchFunc = (text) => {
@@ -302,6 +440,11 @@ useEffect(() => {
         hall.name.toLowerCase().includes(text.toLowerCase().trim())
       );
     setFilteredHalls(filtered);
+    const filteredFT = text.trim() === '' ? [] : 
+      foodTrucks.filter((truck) => 
+        truck.name.toLowerCase().includes(text.toLowerCase().trim())
+      );
+    setFilteredFoodTrucks(filteredFT);
   };
 
   // Add logging to render function
@@ -317,9 +460,21 @@ useEffect(() => {
                 style={styles.diningHall}
                 id={hall._id}
                 name={hall.name}
-                isOpen={isDiningHallOpen(hall, mealPeriod, now)}
-                closeTime={isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[mealPeriodDict[mealPeriod]]?.close : null}
-                nextOpenTime={!isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[getNextMealPeriodIndex(now, hall)]?.open : null}
+                isOpen={isDiningHallOpen(hall, now)}
+                closeTime={isDiningHallOpen(hall, now) ? getClosingTime(hall, now) : null}
+                nextOpenTime={!isDiningHallOpen(hall, now) ? getNextOpenTime(hall, now) : null}
+              />
+            </View>
+          ))}
+          {filteredFoodTrucks.map((truck) => (
+            <View key={truck._id}>
+              <FoodTruck
+                style={styles.foodTruck}
+                onMenu={true}
+                truck={truck}
+                isOpen={isFoodTruckOpen(truck, now)}
+                closeTime={isFoodTruckOpen(truck, now) ? getClosingTruckTime(truck, now) : null}
+                nextOpenTime={!isFoodTruckOpen(truck, now) ? getNextOpenTruckTime(truck, now) : null}
               />
             </View>
           ))}
@@ -338,7 +493,7 @@ useEffect(() => {
               id={hall._id}
               name={hall.name}
               isOpen={true}
-              closeTime={hall.hours[mealPeriodDict[mealPeriod]]?.close}
+              closeTime={getClosingTime(hall, now)}
             />
           </View>
         )) : closedDiningHalls.map((hall) => (
@@ -348,19 +503,28 @@ useEffect(() => {
               id={hall._id}
               name={hall.name}
               isOpen={false}
-              nextOpenTime={hall.hours[getNextMealPeriodIndex(now, hall)]?.open}
+              nextOpenTime={getNextOpenTime(hall, now)}
             />
           </View>
         ))}
         <Text style={styles.subheading}>Food Trucks</Text>
-        {
-          foodTrucks.map(truck => (
+        {section.title === 'Open Now' ? openFoodTrucks.map(truck => (
+            <FoodTruck 
+              key={truck._id}
+              truck={truck}
+              onMenu={true}
+              isOpen={true}
+              closeTime={getClosingTruckTime(truck, now)}
+            />
+        )) : closedFoodTrucks.map((truck) => (
             <FoodTruck 
               key={truck._id} 
               truck={truck} 
+              onMenu={true}
+              isOpen={false}
+              nextOpenTime={getNextOpenTruckTime(truck, now)}
             />
-          ))
-        }
+        ))}
       </View>
     );
   };
@@ -414,6 +578,8 @@ useEffect(() => {
             containerStyle={styles.searchBar}
             platform="default"
             lightTheme
+            searchIcon={{ name: 'search', size: 24 }}
+            clearIcon={{ name: 'clear', size: 24 }}
           />
         </View>
         <SectionList

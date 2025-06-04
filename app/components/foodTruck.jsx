@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useContext, useEffect, useState } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
+import { useContext, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
 
 
 const FoodTruck = ({
@@ -11,9 +11,10 @@ const FoodTruck = ({
   onMenu,
   isOpen = false,
   closeTime = "N/A",
-  nextOpenTime = "Unavailable"
+  nextOpenTime = "Unavailable",
+  isLiked = false,
 }) => {
-  const [isFavorited, setFavorited] = useState( false );
+  const [isFavorited, setFavorited] = useState(isLiked);
   const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const url = config.BASE_URL;
@@ -56,13 +57,10 @@ const handleFav = async () => {
 
   return (
     <View style={styles.cardContainer}>
-      <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-        {truck.name}
-      </Text>
-      { onMenu? 
-        <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
-        <View/>
-      }
+      <View style={styles.nameTimeContainer}>
+        <Text style={styles.name}>{truck.name}</Text>
+        {onMenu && <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>}
+      </View>
       <Pressable onPress={handleFav} style={styles.heartContainer}>
         <FontAwesome 
           name={isFavorited ? "heart" : "heart-o"} 
