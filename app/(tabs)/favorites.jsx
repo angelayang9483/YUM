@@ -103,28 +103,19 @@ export default function Tab() {
     }
   }, [user]);
 
-  // useEffect(() => {
-  //   if (favoriteMealIds.length > 0) {
-  //     fetchFavoriteMeals();
-  //   }
-  //   if (favoriteFoodTruckIds.length > 0) {
-  //     fetchFavoriteFoodTrucks();
-  //   }
-  // }, [favoriteMealIds, favoriteFoodTruckIds]);
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.padding}></Text>
-        <Text style={styles.title}>favorites</Text>
+        <Text style={styles.title}>FAVORITES</Text>
       </View>
 
       {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>here today</Text>
+        <Text style={styles.heading}>Here Today</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>MEALS</Text>
+          <Text style={styles.subheading}>Meals</Text>
           {
             hereTodayMeals.map((meal, _idx) => (
               <Meal
@@ -140,7 +131,7 @@ export default function Tab() {
           }
         </View>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>FOOD TRUCKS</Text>
+          <Text style={styles.subheading}>Food Trucks</Text>
           {
             hereTodayFoodTrucks.map((truck, _idx) => (
               <FoodTruck
@@ -160,9 +151,9 @@ export default function Tab() {
       {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>not here today</Text>
+        <Text style={styles.heading}>Not Here Today</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>MEALS</Text>
+          <Text style={styles.subheading}>Meals</Text>
           {
             notHereTodayMeals.map((meal, _idx) => (
               <Meal
@@ -178,7 +169,7 @@ export default function Tab() {
           }
         </View>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>FOOD TRUCKS</Text>
+          <Text style={styles.subheading}>Food Trucks</Text>
           {
             notHereTodayFoodTrucks.map((truck, _idx) => (
               <FoodTruck
@@ -215,17 +206,19 @@ const styles = StyleSheet.create({
     fontFamily: 'perpetua-bold-italic'
   },
   heading: {
-    fontWeight: '500',
-    fontSize: 25,
-    fontFamily: 'Gill-Sans'
+    fontWeight: '700',
+    fontSize: 30,
+    fontFamily: 'perpetua-bold'
   },
   subheading: {
-    fontSize: 25,
+    width: '100%',
+    fontSize: 23,
     color: 'rgba(30, 55, 101, 1)',
-    fontFamily: 'Perpetua-MT-Regular',
+    fontFamily: 'Gill-Sans',
+    fontWeight: '600',
     marginTop: 5,
   },
   padding: {
-    paddingTop: 15
+    paddingTop: 40
   }
 });
