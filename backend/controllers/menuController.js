@@ -5,8 +5,8 @@ const getMenus = async (req, res) => {
     try {
         const menus = await MenuModel.find()
         .populate({
-            path: 'mealPeriods.stations.meals',
-            model: 'Meal'
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
         })
         .exec();
         res.status(200).json(menus);
@@ -39,8 +39,8 @@ const getMenusToday = async (req, res) => {
             }
         })
         .populate({
-            path: 'mealPeriods.stations.meals',
-            model: 'Meal'
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
         })
         .exec();
         res.status(200).json(menus);
@@ -50,23 +50,24 @@ const getMenusToday = async (req, res) => {
     }
 };
 
-// GET all menus by dining hall
-const getMenusByDiningHall = async (req, res) => {
+// GET menu by dining hall
+const getMenuByDiningHall = async (req, res) => {
     try {
-        const menus = await MenuModel.find({ diningHallId: req.params.diningHallId })
+        const menu = await MenuModel.findOne({ diningHallId: req.params.diningHallId })
         .populate({
-            path: 'mealPeriods.stations.meals',
-            model: 'Meal'
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
         })
         .exec();
-        res.status(200).json(menus);
+        res.status(200).json(menu);
     } catch (err) {
         console.error('Error fetching menus:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// GET menu by dining hall and today
+// GET menu by dining hall
+/*
 const getMenuByDiningHallToday = async (req, res) => {
     try {
         const now = new Date();
@@ -93,7 +94,7 @@ const getMenuByDiningHallToday = async (req, res) => {
         })
         .populate({
             path: 'mealPeriods.stations.meals',
-            model: 'Meal'
+            model: 'meal'
         })
         .exec();
         res.status(200).json(menu);
@@ -101,7 +102,7 @@ const getMenuByDiningHallToday = async (req, res) => {
         console.error('Error fetching menus:', err);
         res.status(500).json({ message: 'Server error' });
     }
-};
+};*/
     
 // POST new menu
 const createMenu = async (req, res) => {
@@ -115,4 +116,4 @@ const createMenu = async (req, res) => {
   };
 
 
-module.exports = { getMenus, getMenusToday, getMenusByDiningHall, getMenuByDiningHallToday, createMenu };
+module.exports = { getMenus, getMenusToday, getMenuByDiningHall, /*getMenuByDiningHallToday,*/ createMenu };
