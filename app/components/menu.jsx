@@ -2,19 +2,19 @@ import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    Modal,
-    PanResponder,
-    Pressable,
-    SafeAreaView,
-    SectionList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Modal,
+  PanResponder,
+  Pressable,
+  SafeAreaView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
