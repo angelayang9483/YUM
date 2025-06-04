@@ -454,9 +454,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  sectionListContent: {
-    paddingHorizontal: 15,
-  },
   section: {
     width: '100%',
     paddingVertical: 10,

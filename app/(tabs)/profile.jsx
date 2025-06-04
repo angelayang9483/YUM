@@ -132,9 +132,10 @@ export default function Tab() {
   return (
     <View style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.heading}>{username}</Text>
+        <View style={styles.padding}></View>
+        <Text style={styles.title}>{username}</Text>
       </View>
-      <Line />
+
       <View style={styles.section}>
         <Text style={styles.heading}>Karma: {karma}</Text>
         <Text style={styles.content}>You are in the top {karmaPercentile}% of users!</Text>
@@ -189,12 +190,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-evenly',
     alignItems: 'center',
+    backgroundColor: 'white'
   },
   centered: {
     justifyContent: 'center',
   },
   section: {
     alignItems: 'center',
+  },
+  title: {
+    fontWeight: '800',
+    fontSize: 30,
+    color: 'rgba(0, 80, 157, 1)',
+    paddingHorizontal: 15,
   },
   post: {
     flexDirection: 'row',
@@ -235,5 +243,8 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 1)',
     fontSize: 16,
     margin: 20,
+  }, 
+  padding: {
+    paddingTop: 60
   }
 });
