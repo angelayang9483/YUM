@@ -6,7 +6,13 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
 
-const FoodTruck = ({ truck }) => {
+const FoodTruck = ({
+  truck,
+  onMenu,
+  isOpen = false,
+  closeTime = "N/A",
+  nextOpenTime = "Unavailable"
+}) => {
   const [isFavorited, setFavorited] = useState( false );
   const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
@@ -53,6 +59,10 @@ const handleFav = async () => {
       <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
         {truck.name}
       </Text>
+      { onMenu? 
+        <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
+        <View/>
+      }
       <Pressable onPress={handleFav} style={styles.heartContainer}>
         <FontAwesome 
           name={isFavorited ? "heart" : "heart-o"} 

@@ -16,15 +16,19 @@ export default function Tab() {
   const { user } = useContext(AuthContext);
 
   const [diningHalls, setDiningHalls] = useState([]);
-  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
-  const [foodTrucks, setFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
+
+  const [foodTrucks, setFoodTrucks] = useState([]);
+  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
+  const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
+
   const [now, setNow] = useState(new Date());
   const [mealPeriod, setMealPeriod] = useState('none');
+
   const [searchValue, setSearchValue] = useState('');
-  const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
   const [filteredHalls, setFilteredHalls] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const mealPeriodDict = {
@@ -142,6 +146,60 @@ export default function Tab() {
     setFoodTrucks(response.data);
   }
   
+  const isFoodTruckOpen = ( truck ) => {
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    if (!truck || !truck.hours || truck.hours.length === 0) {
+      return false;
+    }
+
+    if (truck.hours[0].label === "Evening") {
+      if (hours >= 17 && hours < 21) {
+        if (hours === 20 && minutes >= 30) return false;
+        return true;
+      }
+    } else if (truck.hours[0].label === "Late Night") {
+      if (hours >= 21 || hours < 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  const getNextOpenTruckTime = ( truck ) => {
+    const hours = now.getHours();
+
+    if (!truck || !truck.hours || truck.hours.length === 0) {
+      return false;
+    }
+
+    if (truck.hours[0].label === "Evening") {
+      if (hours < 5) {
+        return "5:00 p.m.";
+      }
+    } else if (truck.hours[0].label === "Late Night") {
+      if (hours < 21) {
+        return "9:00 p.m.";
+      }
+    }
+
+    return "N/A";
+  }
+
+  const getClosingTruckTime = ( truck ) => {
+    if (!truck || !truck.hours || truck.hours.length === 0) {
+      return false;
+    }
+
+    if (truck.hours[0].label === "Evening") {
+      return "8:30 p.m.";
+    } else if (truck.hours[0].label === "Late Night") {
+      return "12:00 a.m.";
+    }
+  }
+
   // display loading screen if it is still scraping info
   useEffect(() => {
     const checkScraping = async () => {
@@ -212,27 +270,41 @@ export default function Tab() {
 
   // checks if dining halls are closed or open
   useEffect(() => {
-    if (!diningHalls || diningHalls.length === 0) {
+    if (!diningHalls || diningHalls.length === 0 || !foodTrucks || foodTrucks.length === 0) {
       console.log('Waiting for dining halls data...');
       return;
     }
   
     console.log('Processing dining halls:', diningHalls);
-    const open = [];
-    const closed = [];
+    const openHalls = [];
+    const closedHalls = [];
   
     diningHalls.forEach(hall => {
       console.log('Checking hall:', hall.name, 'for period:', mealPeriod);
       if (isDiningHallOpen(hall)) {
-        open.push(hall);
+        openHalls.push(hall);
       } else {
-        closed.push(hall);
+        closedHalls.push(hall);
       }
     });
+
+    console.log('Processing food trucks: ', foodTrucks);
+    const openTrucks = [];
+    const closedTrucks = [];
+
+    foodTrucks.forEach(truck => {
+      if (isFoodTruckOpen(truck)) {
+        openTrucks.push(truck);
+      } else {
+        closedTrucks.push(truck);
+      }
+    })
   
-    console.log('Open:', open);
-    setOpenDiningHalls(open);
-    setClosedDiningHalls(closed);
+    console.log('Open:', openHalls);
+    setOpenDiningHalls(openHalls);
+    setClosedDiningHalls(closedHalls);
+    setOpenFoodTrucks(openTrucks);
+    setClosedFoodTrucks(closedTrucks);
   }, [diningHalls, mealPeriod]);
 
   
@@ -293,20 +365,29 @@ export default function Tab() {
             />
           </View>
         ))}
-
-        {section.title === 'Open Now' ?
-          <Text style={styles.subheading}>Food Trucks</Text> : <View/>
-        }
-        {section.title === 'Open Now' ? foodTrucks.map((truck) => (
+        <Text style={styles.subheading}>Food Trucks</Text>
+        {section.title === 'Open Now' ? openFoodTrucks.map((truck) => (
           <View key={truck._id}>
             <FoodTruck 
               key={truck._id} 
               truck={truck} 
+              onMenu={true}
+              isOpen={true}
+              closeTime={getClosingTruckTime(truck)}
             />
           </View>
-        )) : 
-          <View/>
-        }
+        )) : closedFoodTrucks.map((truck) => (
+          <View key={truck._id}>
+            <FoodTruck 
+              key={truck._id} 
+              truck={truck} 
+              onMenu={true}
+              isOpen={false}
+              nextOpenTime={getNextOpenTruckTime(truck)}
+            />
+          </View>
+        ))}
+
       </View>
     );
   };

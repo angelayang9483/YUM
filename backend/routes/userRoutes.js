@@ -26,4 +26,7 @@ router.get('/:userId/liked-comments', userController.getLikedComments);
 // GET comments user has made
 router.get('/:userId/comments', userController.getComments);
 
+// GET favorite trucks
+router.get('/:userId/favorite-trucks', userController.getFavoriteFoodTrucks);
+
 module.exports = router;

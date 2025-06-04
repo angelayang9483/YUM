@@ -92,53 +92,6 @@ const checkUsernameAndPassword = async (req, res) => {
   }
 }
 
-// const likeComment = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { commentId } = req.body;
-
-//     // Find user and comment
-//     const user = await User.findById(userId);
-//     const comment = await Comment.findById(commentId);
-
-//     if (!user) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
-    
-//     if (!comment) {
-//       return res.status(404).json({ error: "Comment not found" });
-//     }
-
-//     // Check if user already liked this comment
-//     const alreadyLiked = user.likedComments.includes(commentId);
-
-//     if (alreadyLiked) {
-//       // Unlike: Remove from user's liked array and decrease comment count
-//       user.likedComments = user.likedComments.filter(id => id.toString() !== commentId);
-//       comment.likes -= 1
-//     } else {
-//       // Like: Add to user's liked array and increase comment count
-//       user.likedComments.push(commentId);
-//       comment.likes += 1;
-//     }
-
-//     // Save both updates
-//     await user.save();
-//     await comment.save();
-
-//     res.status(200).json({
-//       success: true,
-//       isLiked: !alreadyLiked,
-//       likeCount: comment.likes,
-//       message: alreadyLiked ? "Comment unliked" : "Comment liked"
-//     });
-
-//   } catch (error) {
-//     console.error("Like comment error:", error);
-//     res.status(500).json({ error: "Server error occurred" });
-//   }
-// }
-
 const getLikedComments = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -159,6 +112,30 @@ const getLikedComments = async (req, res) => {
 
   } catch (error) {
     console.error("Get liked comments error:", error);
+    res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
+const getFavoriteFoodTrucks = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user and populate their favorite trucks
+    const user = await User.findById(userId).populate('favoriteFoodTrucks');
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return the populated favorite trucks
+    res.status(200).json({
+      success: true,
+      favoriteFoodTrucks: user.favoriteFoodTrucks,
+      count: user.favoriteFoodTrucks.length
+    });
+
+  } catch (error) {
+    console.error("Get favorite food trucks error:", error);
     res.status(500).json({ error: "Server error occurred" });
   }
 }
@@ -196,5 +173,6 @@ module.exports = {
   checkUsernameAndPassword,
   // likeComment,
   getLikedComments,
-  getComments
+  getComments,
+  getFavoriteFoodTrucks
 };
