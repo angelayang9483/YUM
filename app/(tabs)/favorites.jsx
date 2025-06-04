@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 1)',
   },
   padding: {
-    paddingTop: 15
+    paddingTop: 40
   }
 });

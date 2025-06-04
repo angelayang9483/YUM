@@ -70,7 +70,7 @@ const handleFav = async () => {
         }
       </View>
       <Pressable onPress={handleFav} style={styles.heartContainer}>
-        {location != 'menus' && (
+        {location == 'popular' && (
             <Text style={styles.likeCount}>{favoriteCount}</Text>
         )}
         <FontAwesome 
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   nameTimeContainer: {
     flexDirection: 'column',
-    width: '90%'
+    width: '85%'
   },
   name: {
     color: 'white',
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   heartContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    minWidth: 30,
     flexShrink: 0,
   }
 });

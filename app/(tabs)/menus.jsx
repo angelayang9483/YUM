@@ -404,7 +404,6 @@ export default function Tab() {
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
-          <Text style={styles.padding}></Text>
           <Text style={styles.title}>Menus</Text>
           <SearchBar
             placeholder="Type here ..."
@@ -511,6 +510,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderTopWidth: 0,
     paddingHorizontal: 0,
-    marginBottom: 10,
   },
 });

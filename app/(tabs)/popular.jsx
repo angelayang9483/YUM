@@ -67,7 +67,8 @@ export default function Tab() {
               name={meal.name}
               diningHall={meal.diningHall}
               isLiked={true}
-              location={'favorites'}
+              location={'popular'}
+              favoritesCount={meal.favoritesCount}
             />
           ))
           }
@@ -90,6 +91,7 @@ export default function Tab() {
             <FoodTruck
               key={foodTruck._id}
               truck={foodTruck}
+              location={'popular'}
             />
           ))
           }
@@ -128,6 +130,6 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 1)',
   },
   padding: {
-    paddingTop: 15
+    paddingTop: 40
   }
 });

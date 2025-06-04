@@ -39,16 +39,21 @@ const Meal = (props) => {
         }
     };
 
+    const isMenu = props.location === "menu";
     const isFavorites = props.location === "favorites";
+    const isPopular = props.location === "popular";
 
     return (
-        <View style={isFavorites ? styles.favoritesContainer : styles.menusContainer}>
+        <View style={isMenu ? styles.menusContainer : styles.favoritesContainer}>
             <View style={styles.textContainer}>
-                <Text style={isFavorites ? styles.favoritesItem : styles.menusItem}>{props.name}</Text>
-                {isFavorites && (
+                <Text style={isMenu ? styles.menusItem : styles.favoritesItem}>{props.name}</Text>
+                {!isMenu && (
                     <Text style={styles.diningHall}>{props.diningHall}</Text>
                 )}
             </View>
+            {isPopular && (
+                <Text style={styles.favoritesCount}>{props.favoritesCount}</Text>
+            )}
             <Pressable onPress={handleLike} style={styles.heartContainer}>
                 <FontAwesome 
                     name={isLiked ? "heart" : "heart-o"} 
@@ -56,7 +61,6 @@ const Meal = (props) => {
                     color="white" 
                 />
             </Pressable>
-            <Text style={styles.favoritesCount}>{favoritesCount}</Text>
         </View>
     );
 };
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flexDirection: 'column',
-        width: '90%',
+        width: '87%',
     },
     favoritesItem: {
         color: 'white',
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     },
     favoritesCount: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: '500',
+        paddingTop: 2,
+        paddingRight: 5
     }
 });
