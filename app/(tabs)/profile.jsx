@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useFonts } from 'expo-font';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useContext, useEffect, useState } from 'react';
@@ -7,7 +8,6 @@ import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -147,12 +147,12 @@ export default function Tab() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>karma: {karma}</Text>
-        <Text style={styles.content}>you are in the top {karmaPercentile}% of users!</Text>
+        <Text style={styles.heading}>Karma: {karma}</Text>
+        <Text style={styles.content}>You are in the top {karmaPercentile}% of users!</Text>
       </View>
       <Line />
       <View style={styles.section}>
-        <Text style={styles.heading}>your comments</Text>
+        <Text style={styles.heading}>Your comments</Text>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {comments.length > 0 ? (
             comments.map((comment) => (
@@ -170,7 +170,7 @@ export default function Tab() {
       </View>
       <Line />
       <View style={styles.section}>
-        <Text style={styles.heading}>your liked comments</Text>
+        <Text style={styles.heading}>Your liked comments</Text>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {likedComments.length > 0 ? (
             likedComments.map((comment) => (
@@ -188,7 +188,7 @@ export default function Tab() {
       </View>
       <Line />
       <Pressable onPress={handleLogout}>
-        <Text style={styles.heading}>LOG OUT</Text>
+        <Text style={styles.heading}>Log Out</Text>
       </Pressable>
     </View>
   );

@@ -19,8 +19,8 @@ import {
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import Comment from './comment.jsx';
 import { initializeMealAndTruckListeners } from '../utils/helpers.js';
+import Comment from './comment.jsx';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
@@ -478,7 +478,9 @@ const styles = StyleSheet.create({
     padding: 8,
     margin: 1,
     marginAbove: 2,
-    width: '200%',
+    width: '100%',
+    borderRadius: 5,
+    marginTop: 10,
   },
   listContainer: {
     flex: 1,
