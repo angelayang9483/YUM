@@ -7,6 +7,7 @@ import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const [favorites, setFavorites] = useState([]);
@@ -17,6 +18,14 @@ export default function Tab() {
   const [error, setError] = useState(null);
   const [popularMeals, setPopularMeals] = useState([]);
   const [popularFoodTrucks, setPopularFoodTrucks] = useState([]);
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
 
   const fetchPopularMeals = async () => {
     try {
@@ -52,13 +61,13 @@ export default function Tab() {
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.padding}></Text>
-        <Text style={styles.title}>Popular</Text>
+        <Text style={styles.title}>popular today</Text>
       </View>
 
-      <Line/>
+      {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Meals</Text>
+        <Text style={styles.heading}>meals</Text>
         <View style={styles.subsection}>
           {
           popularMeals.map(meal => (
@@ -75,10 +84,10 @@ export default function Tab() {
         </View>
       </View>
 
-      <Line/>
+      {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Food Trucks</Text>
+        <Text style={styles.heading}>food trucks</Text>
         <View style={styles.subsection}>
           {
           popularFoodTrucks.map(foodTruck => (
@@ -104,7 +113,7 @@ export default function Tab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   section: {
     paddingVertical: 10,
@@ -115,19 +124,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5
   },
   title: {
-    fontWeight: '800',
-    fontSize: 30,
-    color: 'rgba(0, 80, 157, 1)',
+    fontSize: 40,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'perpetua-bold-italic'
   },
   heading: {
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 25,
-    color: 'rgba(0, 80, 157, 1)',
+    fontFamily: 'Gill-Sans'
   },
   subheading: {
-    fontWeight: '600',
-    fontSize: 20,
-    color: 'rgba(0, 80, 157, 1)',
+    // fontWeight: '600',
+    fontSize: 25,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'Perpetua-MT-Regular'
   },
   padding: {
     paddingTop: 40

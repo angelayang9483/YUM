@@ -7,6 +7,7 @@ import DiningHall from '../components/diningHall.jsx';
 import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -29,6 +30,16 @@ export default function Tab() {
   const [filteredHalls, setFilteredHalls] = useState([]);
 
   const [loading, setLoading] = useState(true);
+
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
+
 
   const mealPeriodDict = {
     'Breakfast': 0,
@@ -175,7 +186,7 @@ export default function Tab() {
     }
 
     if (truck.hours[0].label === "Evening") {
-      if (hours < 5) {
+      if (hours < 17) {
         return "5:00 p.m.";
       }
     } else if (truck.hours[0].label === "Late Night") {
@@ -342,7 +353,7 @@ export default function Tab() {
     // Normal view with sections
     return (
       <View>
-        <Text style={styles.subheading}>Dining Halls</Text>
+        <Text style={styles.subheading}>DINING HALLS</Text>
         {section.title === 'Open Now' ? openDiningHalls.map((hall) => (
           <View key={hall._id}>
             <DiningHall
@@ -364,7 +375,7 @@ export default function Tab() {
             />
           </View>
         ))}
-        <Text style={styles.subheading}>Food Trucks</Text>
+        <Text style={styles.subheading}>FOOD TRUCKS</Text>
         {section.title === 'Open Now' ? openFoodTrucks.map((truck) => (
           <View key={truck._id}>
             <FoodTruck 
@@ -404,9 +415,9 @@ export default function Tab() {
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
-          <Text style={styles.title}>Menus</Text>
+          <Text style={styles.title}>menus</Text>
           <SearchBar
-            placeholder="Type here ..."
+            placeholder="Search for a dining hall ..."
             onChangeText={searchFunc}
             value={searchValue}
             round
@@ -419,16 +430,16 @@ export default function Tab() {
           contentContainerStyle={styles.sectionListContent}
           sections={searchValue.trim() !== '' ? [
             {
-              title: 'Search Results',
+              title: 'search results',
               data: [{ id: 'search' }]
             }
           ] : [
             {
-              title: 'Open Now',
+              title: 'open now',
               data: [{ id: 'open' }]
             },
             {
-              title: 'Closed',
+              title: 'closed',
               data: [{ id: 'closed' }]
             }
           ]}
@@ -451,7 +462,7 @@ export default function Tab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   sectionListContent: {
     padding: 0
@@ -467,23 +478,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   title: {
-    fontWeight: '800',
-    fontSize: 30,
-    color: 'rgba(0, 80, 157, 1)',
-    paddingHorizontal: 15,
+    // fontWeight: '800',
+    fontSize: 40,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'perpetua-bold-italic'
   },
   heading: {
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 25,
-    color: 'rgba(0, 80, 157, 1)',
+    fontFamily: 'Gill-Sans'
   },
   subheading: {
     width: '100%',
-    fontWeight: '600',
-    fontSize: 20,
-    color: 'rgba(0, 80, 157, 1)',
+    fontSize: 25,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'Perpetua-MT-Regular',
     paddingLeft: 20,
-    marginBottom: 10,
+    marginTop: 5,
   },
   padding: {
     paddingTop: 15,
@@ -506,7 +517,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 0.5)'
   },
   searchBar: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
     borderBottomWidth: 0,
     borderTopWidth: 0,
     paddingHorizontal: 0,

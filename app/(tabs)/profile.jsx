@@ -7,6 +7,7 @@ import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -21,6 +22,15 @@ export default function Tab() {
   const [karmaPercentile, setKarmaPercentile] = useState(0);
   const [comments, setComments] = useState([]);
   const [likedComments, setLikedComments] = useState([]);
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf'),
+    'Gil-Sans-Italic': require('../../assets/gill-sans-2/Gill-Sans-Italic.otf')
+  });
 
   const getUser = async () => {
     try {
@@ -137,12 +147,12 @@ export default function Tab() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Karma: {karma}</Text>
-        <Text style={styles.content}>You are in the top {karmaPercentile}% of users!</Text>
+        <Text style={styles.heading}>karma: {karma}</Text>
+        <Text style={styles.content}>you are in the top {karmaPercentile}% of users!</Text>
       </View>
       <Line />
       <View style={styles.section}>
-        <Text style={styles.heading}>Your Comments</Text>
+        <Text style={styles.heading}>your comments</Text>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {comments.length > 0 ? (
             comments.map((comment) => (
@@ -160,7 +170,7 @@ export default function Tab() {
       </View>
       <Line />
       <View style={styles.section}>
-        <Text style={styles.heading}>Your Liked Comments</Text>
+        <Text style={styles.heading}>your liked comments</Text>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {likedComments.length > 0 ? (
             likedComments.map((comment) => (
@@ -178,7 +188,7 @@ export default function Tab() {
       </View>
       <Line />
       <Pressable onPress={handleLogout}>
-        <Text style={styles.heading}>Log Out</Text>
+        <Text style={styles.heading}>LOG OUT</Text>
       </Pressable>
     </View>
   );
@@ -190,7 +200,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    backgroundColor: 'white'
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   centered: {
     justifyContent: 'center',
@@ -199,9 +209,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontWeight: '800',
-    fontSize: 30,
-    color: 'rgba(0, 80, 157, 1)',
+    fontSize: 40,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'perpetua-bold-italic',
     paddingHorizontal: 15,
   },
   post: {
@@ -209,14 +219,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   heading: {
-    fontWeight: 'bold',
+    fontWeight: '500',
     fontSize: 20,
-    color: 'rgba(0, 80, 157, 1)',
+    fontFamily: 'Gill-Sans'
   },
   content: {
     fontSize: 17,
-    color: 'rgba(0, 80, 157, 1)',
+    color: 'rgba(30, 55, 101, 1)',
     margin: 5,
+    fontFamily: 'Gill-Sans-Italic',
+    fontStyle: 'italic'
   },
   errorText: {
     color: 'red',
