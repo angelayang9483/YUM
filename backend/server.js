@@ -24,20 +24,14 @@ app.get('/scrape-status', (req, res) => {
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
-const scrapeMenusRoutes = require('./routes/scrapeMenusRoutes');
-app.use('/api/scrapeMenus', scrapeMenusRoutes);
-
 const diningHallRoutes = require('./routes/diningHallRoutes');
 app.use('/api/dininghalls', diningHallRoutes);
 
 const commentRoutes = require('./routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
 
-const mealRoutes = require('./routes/mealRoutes');
-app.use('/api/meals', mealRoutes);
-
-const scrapeFoodTrucksRoutes = require('./routes/scrapeFoodTrucksRoutes');
-app.use('/api/scrapeFoodTrucks', scrapeFoodTrucksRoutes);
+const foodTruckRoutes = require('./routes/foodTruckRoutes');
+app.use('/api/foodtrucks', foodTruckRoutes);
 
 // Import WebScrapeController
 const WebScrapeController = require('./controllers/WebScrapeController');

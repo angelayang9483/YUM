@@ -15,9 +15,9 @@ export default function Tab() {
   const [diningHalls, setDiningHalls] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
-  const [time, setTime] = useState('');
   const [mealPeriod, setMealPeriod] = useState('none');
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
 
   const mealPeriodDict = {
     'Breakfast': 0,
@@ -25,23 +25,22 @@ export default function Tab() {
     'Dinner': 2,
     'Extended Dinner': 3
   };
-  
   const mealPeriods = ['Breakfast', 'Lunch', 'Dinner', 'Extended Dinner'];
 
-  function getNextMealPeriodIndex(now, hall) {
-    const nowHour = now.getHours();
-    
+  function getNextMealPeriodIndex( hall ) {
+    const hours = now.getHours();
+
     for (let i = 0; i < mealPeriods.length; i++) {
       const period = mealPeriods[i];
       const matchingHours = hall.hours.find(p => p.label.toLowerCase().trim() === period.toLowerCase().trim());
       if (!matchingHours || !matchingHours.open) continue; // skip if this hall doesn't have that period
-    
+
       let openHour = parseInt(matchingHours.open.split(':')[0], 10);
-      if (matchingHours.open.toUpperCase().includes('PM') && openHour !== 12) {
+      if (matchingHours.open.toUpperCase().includes('P.M.') && openHour !== 12) {
         openHour += 12;
       }
   
-      if (openHour > nowHour) {
+      if (openHour > hours) {
         return i;
       }
     }
@@ -50,34 +49,14 @@ export default function Tab() {
     return 0;
   }
 
-  const getDiningHalls = async () => {
-    // console.log('Attempting to fetch dining hall data from:', `${url}/api/dininghalls/`);
-    const response = await axios.get(`${url}/api/dininghalls`);
-    console.log('Dining hall data response:', response.data);
-    setDiningHalls(response.data);
-  }
+  function isDiningHallOpen( hall ) {
+    const hours = now.getHours();
 
-  const now = new Date();
-
-  // test
-  // const now = new Date(
-  //   new Date().getFullYear(),  // year
-  //   new Date().getMonth(),     // month (0-indexed)
-  //   new Date().getDate(),      // day of the month
-  //   13,                        // hour (1 PM)
-  //   0,                         // minutes
-  //   0,                         // seconds
-  //   0                          // milliseconds
-  // );
-
-  function isDiningHallOpen(hall, mealPeriod, now) {
     if (!hall || !hall.hours || hall.hours.length === 0) {
       return false;
     }
   
-    const todayString = now.toDateString();
-    const hours = now.getHours();
-  
+    const todayString = now.toDateString();  
     for (const period of hall.hours) {
       if (!period.label || !period.open || !period.close) continue;
   
@@ -105,49 +84,71 @@ export default function Tab() {
   
     return false;
   }  
-  
-  useEffect(() => {
-    getDiningHalls();
-  }, []);  // Run once on mount
 
-  // supposed to run every 30 minutes
+  function getNextOpenTime( hall ) {
+    let nextIndex = getNextMealPeriodIndex( hall );
+    let nextTime = hall.hours[ nextIndex ]
+    // console.log(`NEXT TIME FOR ${hall.name}: `, nextTime.open);
+    return (
+      nextTime?.open || 'N/A'
+    )
+  }
+
+  function getClosingTime ( hall ) {
+    // check for extended dinner
+    if ( mealPeriod === "Dinner" && hall.hours[3].open ) {
+      return hall.hours[3].close;
+    }
+    else {
+      return (
+        hall.hours[
+          mealPeriod === 'none'
+            ? null
+            : (mealPeriodDict[mealPeriod]) % mealPeriods.length
+        ]?.close || 'N/A'
+      )
+    }
+  }
+  
+  // get the dining halls
   useEffect(() => {
-    const hours = now.getHours();
-  
-    const timeString = now.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-    setTime(timeString);
-  
-    let currentPeriod = 'none';
-    if (hours >= 7 && hours < 10) currentPeriod = 'Breakfast';
-    else if (hours >= 11 && hours < 16) currentPeriod = 'Lunch';
-    else if (hours >= 17 && hours < 21) currentPeriod = 'Dinner';
-    else if (hours >= 21 && hours < 24) currentPeriod = 'Extended Dinner';
-  
-    setMealPeriod(currentPeriod);
-  
-    const interval = setInterval(() => {
-      // re-run the time update logic every 30 minutes
-      const now = new Date();
-      const hours = now.getHours();
+    const getDiningHalls = async () => {
+      const response = await axios.get(`${url}/api/dininghalls`);
+      console.log('Dining hall data response:', response.data);
+      setDiningHalls(response.data);
+    }
+
+    getDiningHalls();
+  }, []);
+
+  // rechecks meal period every 30 minutes
+  useEffect(() => {
+    const updateTimeAndMealPeriod = () => {
+    const currentTime = new Date();
+    setNow(currentTime);
+
+    const hours = currentTime.getHours();
   
       const timeString = now.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit',
       });
-      setTime(timeString);
-  
-      let currentPeriod = '';
-      if (hours >= 7 && hours < 10) currentPeriod = 'Breakfast';
-      else if (hours >= 11 && hours < 16) currentPeriod = 'Lunch';
-      else if (hours >= 17 && hours < 21) currentPeriod = 'Dinner';
-      else if (hours >= 21 && hours < 24) currentPeriod = 'Extended Dinner';
-  
+
+      let currentPeriod = 'none';
+      if (hours >= 7 && hours < 11) currentPeriod = 'Breakfast';
+      else if (hours >= 11 && hours < 17) currentPeriod = 'Lunch';
+      else if (hours >= 17 && hours < 22) currentPeriod = 'Dinner';
+      else if (hours >= 21 || hours < 7) currentPeriod = 'Extended Dinner';
+
       setMealPeriod(currentPeriod);
+    };
+
+    updateTimeAndMealPeriod();
+
+    const interval = setInterval(() => {
+      updateTimeAndMealPeriod()
     }, 30 * 60 * 1000);
-  
+
     return () => clearInterval(interval);
   }, []);
   
@@ -171,6 +172,7 @@ export default function Tab() {
     setClosedDiningHalls(closed);
   }, [diningHalls, mealPeriod]);
 
+  // display loading screen if it is still scraping info
   useEffect(() => {
     const checkScraping = async () => {
       let scraping = true;
@@ -182,7 +184,6 @@ export default function Tab() {
           if (!scraping) setLoading(false);
         } catch (err) {
           console.error('Error checking scraping status:', err);
-          // Optional: fallback to hide loader after timeout
           setLoading(false);
           break;
         }
@@ -200,7 +201,6 @@ export default function Tab() {
       </View>
     );
   }
-
 
   return (
     <ScrollView style={styles.container}>
@@ -221,12 +221,7 @@ export default function Tab() {
                 key={hall._id}
                 name={hall.name}
                 isOpen={true}
-                closeTime={                  
-                  hall.hours[
-                    mealPeriod === 'none'
-                      ? null
-                      : (mealPeriodDict[mealPeriod]) % mealPeriods.length
-                  ]?.close || 'N/A'}
+                closeTime={ getClosingTime(hall) }
                 nextOpenTime={null}
               />
             ))
@@ -250,20 +245,14 @@ export default function Tab() {
                 name={hall.name}
                 isOpen={false}
                 closeTime={null}
-                nextOpenTime={
-                  hall.hours[
-                    mealPeriod === 'none'
-                      ? getNextMealPeriodIndex(now, hall)
-                      : (mealPeriodDict[mealPeriod] + 1) % mealPeriods.length
-                  ]?.open || 'N/A'
-                }
+                nextOpenTime={getNextOpenTime(hall, mealPeriod)}
               />
             ))
           }
         </View>
-        <View style={styles.subsection}>
+        {/* <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
-        </View>
+        </View> */}
       </View>
     </ScrollView>
   );
