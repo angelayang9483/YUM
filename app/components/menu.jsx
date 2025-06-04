@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { initializeMealAndTruckListeners } from '../utils/helpers.js';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
@@ -34,37 +35,47 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
 
-  const fetchFavoriteMeals = (mealIdToUpdate, newCount) => {
-    if (mealIdToUpdate && typeof newCount !== 'undefined') {
+  const fetchFavoriteMeals = (meal, adding) => {
+    if (meal) {
         setMenu(prevMenu => 
           prevMenu.map(period => ({
             ...period,
             data: period.data.map(station => ({
               ...station,
-              data: station.data.map(meal => 
-                meal._id === mealIdToUpdate 
-                  ? { ...meal, favoritesCount: newCount } 
-                  : meal
+              data: station.data.map(mealToUpdate => 
+                mealToUpdate._id === meal._id 
+                  ? meal
+                  : mealToUpdate
               ),
             })),
           }))
         );
+        if(!adding) {
+            setFavoriteMeals(prev => prev.filter(a => a._id !== meal._id));
+        } else {
+            setFavoriteMeals(prev => [...prev, meal]);
+        }
       }
     if (!user) {
       setFavoriteMeals([]);
       return;
     }
-    axios
-      .get(`${url}/api/users/${user.userId}/favorite-meal`)
-      .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
-      .catch(err => {
-        console.error('Error fetching favorite meals:', err);
-        setFavoriteMeals([]);
+    if (!meal) {
+      axios
+        .get(`${url}/api/users/${user.userId}/favorite-meals`)
+        .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+        .catch(err => {
+          console.error('Error fetching favorite meals:', err);
+          setFavoriteMeals([]);
       });
+    }
   };
 
   useEffect(() => {
-    fetchFavoriteMeals();
+    const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, null, "MENU.JSX");
+    return () => {
+      cleanup();
+    };
   }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
@@ -262,10 +273,9 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           id={item._id}
                           name={item.name}
                           diningHall={item.diningHall}
-                          isLiked={favoriteMeals.includes(item._id)}
+                          isFavorited={favoriteMeals.some(a => a._id === item._id)}
                           location={'menu'}
                           favoritesCount={item.favoritesCount}
-                          onLikeChange={fetchFavoriteMeals}
                         />
                       )}
                       contentContainerStyle={styles.sectionListContent}

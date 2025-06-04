@@ -1,38 +1,35 @@
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { emit } from '../utils/emitter';
 
 const Meal = (props) => {
     const url = config.BASE_URL;
     const { user } = useContext(AuthContext);
-    const [isLiked, setLiked] = useState(props.isLiked);
-    const [favoritesCount, setFavoritesCount] = useState(props.favoritesCount);
-    const { onLikeChange } = props;
 
-    const handleLike = async () => {  
+    const handleFavorite = async () => {  
         try {
-            if (isLiked) {
+            if (props.isFavorited) {
+                console.log("Unfavoriting meal", props.id)
                 response = await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
                     data: { mealId: props.id } 
                 });
-                setFavoritesCount(favoritesCount - 1);
+                if (response && response.data && response.data.success && response.data.meal) {
+                    emit('unfavorited-meal', response.data.meal);
+                    console.log("Emitted unfavorited meal:", response.data.meal)
+                }
             } else {
+                console.log("Favoriting meal", props.id)
                 response = await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
                     { mealId: props.id }
                 );
-                setFavoritesCount(favoritesCount + 1);
-            }
-            setLiked(!isLiked);
-            if (response && response.data && response.data.success && response.data.meal) {
-                const updatedMeal = response.data.meal;
-                if (onLikeChange) {
-                    onLikeChange(updatedMeal._id, updatedMeal.favoritesCount);
+                if (response && response.data && response.data.success && response.data.meal) {
+                    emit('favorite-meal', response.data.meal);
+                    console.log("Emitted favorite meal:", response.data.meal)
                 }
-            } else if (onLikeChange) {
-                onLikeChange(); 
             }
         } catch (error) {
             console.error('Error toggling favorite meal:', error);
@@ -54,9 +51,9 @@ const Meal = (props) => {
             {isPopular && (
                 <Text style={styles.favoritesCount}>{props.favoritesCount}</Text>
             )}
-            <Pressable onPress={handleLike} style={styles.heartContainer}>
-                <FontAwesome 
-                    name={isLiked ? "heart" : "heart-o"} 
+            <Pressable onPress={handleFavorite} style={styles.heartContainer}>
+                <FontAwesome
+                    name={props.isFavorited ? "heart" : "heart-o"} 
                     size={20} 
                     color="white" 
                 />

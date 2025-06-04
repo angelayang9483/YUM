@@ -2,6 +2,7 @@ const User = require('../models/UserModel');
 const Comment = require('../models/CommentModel');
 const jwt = require('jsonwebtoken');
 const Meal = require('../models/MealModel');
+const FoodTruck = require('../models/FoodTruckModel');
 
 
 // Get all users
@@ -192,7 +193,7 @@ const favoriteMeal = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Meal favorited successfully",
-            meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
+            meal: meal
         });
     } catch (error) {
         console.error("Favorite meal error:", error);
@@ -226,11 +227,77 @@ const unfavoriteMeal = async (req, res) => {
       res.status(200).json({
           success: true,
           message: "Meal unfavorited successfully",
-          meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
+          meal: meal
       });
   } catch (error) {
       console.error("Unfavorite meal error:", error);
       res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
+const favoriteFoodTruck = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { truckId } = req.body;
+
+    const user = await User.findById(id);
+    const truck = await FoodTruck.findById(truckId);
+
+    if (!user) {
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!truck) {
+        return res.status(404).json({ error: "Food truck not found" });
+    }
+
+    user.favoriteFoodTrucks.push(truckId);
+    await user.save();
+
+    truck.favoritesCount += 1;
+    await truck.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Food truck favorited successfully",
+        truck: truck
+    });
+  } catch (error) {
+    console.error("Favorite food truck error:", error);
+    res.status(500).json({ error: "Server error occurred" });
+  }
+}
+
+const unfavoriteFoodTruck = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { truckId } = req.body;
+
+    const user = await User.findById(id);
+    const truck = await FoodTruck.findById(truckId);
+
+    if (!user) {
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!truck) {
+        return res.status(404).json({ error: "Food truck not found" });
+    }
+
+    user.favoriteFoodTrucks.pull(truckId);
+    await user.save();
+
+    truck.favoritesCount -= 1;
+    await truck.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Food truck unfavorited successfully",
+        truck: truck
+    });
+  } catch (error) {
+    console.error("Unfavorite food truck error:", error);
+    res.status(500).json({ error: "Server error occurred" });
   }
 }
 
@@ -267,6 +334,8 @@ module.exports = {
   checkUsernameAndPassword,
   // likeComment,
   getLikedComments,
+  favoriteFoodTruck,
+  unfavoriteFoodTruck,
   getFavoriteFoodTrucks,
   getComments,
   favoriteMeal,

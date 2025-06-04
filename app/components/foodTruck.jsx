@@ -1,77 +1,64 @@
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { emit } from '../utils/emitter.js';
 
 
 const FoodTruck = ({
   truck,
-  onMenu = false,
   isOpen = false,
   closeTime = "N/A",
   nextOpenTime = "Unavailable",
-  isLiked = false,
+  location,
+  isFavorited = false
 }) => {
-  const [isFavorited, setFavorited] = useState(isLiked);
-  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const url = config.BASE_URL;
   const { user } = useContext(AuthContext);
 
-  const [favorited, setFavorited] = useState( isFavorited );
-  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
-
-  const getFoodTruck = async () => {
+  const handleFavorite = async () => {  
     try {
-      const response = await axios.get(`${url}/api/foodtrucks/${truck._id}`);
-      setFavoriteCount(response.data.favoriteCount);
+        if (isFavorited) {
+            console.log("Unfavoriting truck", truck._id)
+            response = await axios.delete(`${url}/api/users/${user.userId}/favorite-truck`, {
+                data: { truckId: truck._id } 
+            });
+            if (response && response.data && response.data.success && response.data.truck) {
+                emit('unfavorited-truck', response.data.truck);
+                console.log("Emitted unfavorited truck:", response.data.truck)
+            }
+        } else {
+            console.log("Favoriting truck", truck._id)
+            response = await axios.post(`${url}/api/users/${user.userId}/favorite-truck`, 
+                { truckId: truck._id }
+            );
+            if (response && response.data && response.data.success && response.data.truck) {
+                emit('favorite-truck', response.data.truck);
+                console.log("Emitted favorite truck:", response.data.truck)
+            }
+        }
     } catch (error) {
-      console.error("Failed to retrieve food truck info:", error);
+        console.error('Error toggling favorite truck:', error);
     }
-  };
-
-  useEffect(() => {
-    if (location === 'favorites') {
-      setFavorited(true);
-    } else if (user && Array.isArray(user.favoriteFoodTrucks)) {
-      setFavorited(user.favoriteFoodTrucks.includes(truck._id));
-    }
-    getFoodTruck();
-  }, [user?.favoriteFoodTrucks, truck._id, location]);
-
-
-const handleFav = async () => {
-  if (!user) return;
-
-  const wasFavorited = favorited;
-  const updatedCount = wasFavorited ? favoriteCount - 1 : favoriteCount + 1;
-
-  try {
-    await axios.post(`${url}/api/foodtrucks/${truck._id}/favorite`, {
-      userId: user.userId
-    });
-
-    setFavorited(!wasFavorited);
-    setFavoriteCount(updatedCount);
-  } catch (error) {
-    console.error("Failed to update favorite on server:", error);
-  }
 };
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={location === 'menus' ? styles.menusContainer : styles.otherContainer}>
       <View style={styles.nameTimeContainer}>
         <Text style={styles.name}>{truck.name}</Text>
-        {onMenu && <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>}
+        {truck.hereToday && (
+          <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>
+        )}
       </View>
-      <Pressable onPress={handleFav} style={styles.heartContainer}>
+      <Pressable onPress={handleFavorite} style={styles.heartContainer}>
         {location == 'popular' && (
-            <Text style={styles.likeCount}>{favoriteCount}</Text>
+            <Text style={styles.likeCount}>{truck.favoritesCount}</Text>
         )}
         <FontAwesome 
-          name={favorited ? "heart" : "heart-o"}
+          name={isFavorited ? "heart" : "heart-o"}
           size={20} 
           color="white" 
         />
@@ -84,7 +71,15 @@ export default FoodTruck;
 
 const styles = StyleSheet.create({
   cardContainer: {
-
+    backgroundColor: '#467FB6',
+    width: '100%',
+    borderRadius: 10,
+    marginTop: 10,
+    paddingHorizontal: 15,
+    height: 70,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   menusContainer: {
     backgroundColor: '#467FB6',

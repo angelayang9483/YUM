@@ -4,10 +4,8 @@ import Menu from './menu.jsx';
 
 const DiningHall = (props) => {
     const [menuVisible, setMenuVisible] = useState(false);
-    const [selectedDiningHall, setSelectedDiningHall] = useState('');
 
-    const handleDiningHallPress = (id) => {
-        setSelectedDiningHall(id);
+    const handleDiningHallPress = () => {
         setMenuVisible(true);
     };
 
