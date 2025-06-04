@@ -45,23 +45,74 @@ app.use('/api/foodtrucks', foodTruckRoutes);
 // Import WebScrapeController
 const WebScrapeController = require('./controllers/WebScrapeController');
 
+
+function msUntilNextMidnight() {
+  const now = new Date();
+  const tomorrowMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0
+  );
+  return tomorrowMidnight.getTime() - now.getTime();
+}
+
+async function runScrapeCycle() {
+  isScraping = true;
+  try {
+    console.log('Starting automatic menu scraping...');
+    await WebScrapeController.updateMenuDatabase();
+    console.log('Menu scraping complete.');
+
+    console.log('Starting food truck scraping...');
+    await WebScrapeController.scrapeFoodTrucks();
+    console.log('Food truck scraping complete.');
+  } catch (err) {
+    console.error('Error during scrape cycle:', err);
+  } finally {
+    isScraping = false;
+  }
+}
+
+function scheduleDailyRefresh() {
+  const initialDelay = msUntilNextMidnight();
+  console.log(
+    `Waiting ${initialDelay}ms until the next local midnight...`
+  );
+
+  setTimeout(() => {
+    runScrapeCycle();
+
+    setInterval(() => {
+      runScrapeCycle();
+    }, 24 * 60 * 60 * 1000);
+  }, initialDelay);
+}
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
 .then(async () => {
   console.log('MongoDB connected');
   
-  // Automatically scrape menus when server starts
-  console.log('Starting automatic menu scraping...');
   try {
+    console.log('Starting initial menu scraping...');
     isScraping = true;
     await WebScrapeController.updateMenuDatabase();
-    console.log('Starting food truck scraping...');
+    console.log('Initial menu scraping complete.');
+
+    console.log('Starting initial food truck scraping...');
     await WebScrapeController.scrapeFoodTrucks();
+    console.log('Initial food truck scraping complete.');
   } catch (error) {
     console.error('Error during initial scraping:', error);
   } finally {
     isScraping = false;
   }
+
+  scheduleDailyRefresh();
 
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 })

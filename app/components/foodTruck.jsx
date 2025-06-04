@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useContext, useEffect, useState } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
+import { useContext, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
 
 
 const FoodTruck = ({
@@ -68,12 +68,14 @@ const handleFav = async () => {
         <View/>
       }
       <Pressable onPress={handleFav} style={styles.heartContainer}>
+        {page != 'menus' && (
+            <Text style={styles.likeCount}>{favoriteCount}</Text>
+        )}
         <FontAwesome 
           name={favorited ? "heart" : "heart-o"}
           size={20} 
           color="white" 
         />
-        <Text style={styles.time}>{favoriteCount}</Text>
       </Pressable>
     </View>
   );
@@ -84,14 +86,15 @@ export default FoodTruck;
 const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: '#467FB6',
-    width: '100%',
+    width: '90%',
     borderRadius: 10,
-    marginTop: 10,
-    paddingHorizontal: 15,
+    marginVertical: 5,
+    paddingHorizontal: 20,
     height: 70,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   cardContent: {
     flex: 1,   // take up all available space except the heart
@@ -100,6 +103,7 @@ const styles = StyleSheet.create({
   },
   nameTimeContainer: {
     flexDirection: 'column',
+    width: '90%'
   },
   name: {
     color: 'white',
@@ -110,10 +114,15 @@ const styles = StyleSheet.create({
     color: 'white',
     paddingTop: 2,
   },
+  likeCount: {
+    color: 'white',
+    paddingTop: 2,
+    paddingRight: 5
+  },
   heartContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     flexShrink: 0,
-    minWidth: 50,
   }
 });

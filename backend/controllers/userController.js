@@ -191,7 +191,8 @@ const favoriteMeal = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Meal favorited successfully"
+            message: "Meal favorited successfully",
+            meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
         });
     } catch (error) {
         console.error("Favorite meal error:", error);
@@ -224,7 +225,8 @@ const unfavoriteMeal = async (req, res) => {
 
       res.status(200).json({
           success: true,
-          message: "Meal unfavorited successfully"
+          message: "Meal unfavorited successfully",
+          meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
       });
   } catch (error) {
       console.error("Unfavorite meal error:", error);

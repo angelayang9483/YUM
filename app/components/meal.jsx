@@ -10,21 +10,30 @@ const Meal = (props) => {
     const { user } = useContext(AuthContext);
     const [isLiked, setLiked] = useState(props.isLiked);
     const [favoritesCount, setFavoritesCount] = useState(props.favoritesCount);
+    const { onLikeChange } = props;
 
     const handleLike = async () => {  
         try {
             if (isLiked) {
-                await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
+                response = await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
                     data: { mealId: props.id } 
                 });
                 setFavoritesCount(favoritesCount - 1);
             } else {
-                await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
+                response = await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
                     { mealId: props.id }
                 );
                 setFavoritesCount(favoritesCount + 1);
             }
             setLiked(!isLiked);
+            if (response && response.data && response.data.success && response.data.meal) {
+                const updatedMeal = response.data.meal;
+                if (onLikeChange) {
+                    onLikeChange(updatedMeal._id, updatedMeal.favoritesCount);
+                }
+            } else if (onLikeChange) {
+                onLikeChange(); 
+            }
         } catch (error) {
             console.error('Error toggling favorite meal:', error);
         }
