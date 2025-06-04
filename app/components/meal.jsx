@@ -21,13 +21,16 @@ const Meal = (props) => {
 
     const handleFavorite = async () => {  
         try {
+            let response;
             if (props.isFavorited) {
                 console.log("Unfavoriting meal", props.id)
                 response = await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
                     data: { mealId: props.id } 
                 });
                 if (response && response.data && response.data.success && response.data.meal) {
-                    emit('unfavorited-meal', response.data.meal);
+                    if (props.onLikeChange) {
+                        props.onLikeChange(response.data.meal, false);
+                    }
                     console.log("Emitted unfavorited meal:", response.data.meal)
                 }
             } else {
@@ -36,7 +39,9 @@ const Meal = (props) => {
                     { mealId: props.id }
                 );
                 if (response && response.data && response.data.success && response.data.meal) {
-                    emit('favorite-meal', response.data.meal);
+                    if (props.onLikeChange) {
+                        props.onLikeChange(response.data.meal, true);
+                    }
                     console.log("Emitted favorite meal:", response.data.meal)
                 }
             }
