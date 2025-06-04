@@ -3,6 +3,7 @@ const Comment = require('../models/CommentModel');
 const jwt = require('jsonwebtoken');
 const Meal = require('../models/MealModel');
 
+
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
@@ -190,7 +191,8 @@ const favoriteMeal = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Meal favorited successfully"
+            message: "Meal favorited successfully",
+            meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
         });
     } catch (error) {
         console.error("Favorite meal error:", error);
@@ -223,7 +225,8 @@ const unfavoriteMeal = async (req, res) => {
 
       res.status(200).json({
           success: true,
-          message: "Meal unfavorited successfully"
+          message: "Meal unfavorited successfully",
+          meal: { _id: meal._id, favoritesCount: meal.favoritesCount }
       });
   } catch (error) {
       console.error("Unfavorite meal error:", error);
@@ -232,21 +235,28 @@ const unfavoriteMeal = async (req, res) => {
 }
 
 const getFavoriteMeals = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-        res.status(200).json({
-            success: true,
-            favoriteMeals: user.favoriteMeals,
-            count: user.favoriteMeals.length
-        });
-    } catch (error) {
-        console.error("Error getting favorite meals:", error);
-        res.status(500).json({ error: "Server error occurred" });
+  console.log("Fetching favorite meals");
+  try {
+    const { userId } = req.params;
+
+    // Find the user and populate their favorite meals
+    const user = await User.findById(userId).populate('favoriteMeals');
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    // Return the populated favorite trucks
+    res.status(200).json({
+      success: true,
+      favoriteMeals: user.favoriteMeals,
+      count: user.favoriteMeals.length
+    });
+
+  } catch (error) {
+    console.error("Get favorite meals error:", error);
+    res.status(500).json({ error: "Server error occurred" });
+  }
 }
 
 module.exports = {

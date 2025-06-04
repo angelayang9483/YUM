@@ -158,6 +158,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
         diningHallName: diningHallId,
         userId: user.userId
       });
+      
       const commentId = response.data.comment._id;
       console.log("Response looks like this: ", response)
       //console.log('Extracted commentId =', commentId);

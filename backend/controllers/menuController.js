@@ -6,7 +6,7 @@ const getMenus = async (req, res) => {
         const menus = await MenuModel.find()
         .populate({
             path: 'mealPeriods.$*.stations.meals',
-            model: 'meal'
+            model: 'Meal'
         })
         .exec();
         res.status(200).json(menus);
@@ -40,7 +40,7 @@ const getMenusToday = async (req, res) => {
         })
         .populate({
             path: 'mealPeriods.$*.stations.meals',
-            model: 'meal'
+            model: 'Meal'
         })
         .exec();
         res.status(200).json(menus);
@@ -56,7 +56,7 @@ const getMenuByDiningHall = async (req, res) => {
         const menu = await MenuModel.findOne({ diningHallId: req.params.diningHallId })
         .populate({
             path: 'mealPeriods.$*.stations.meals',
-            model: 'meal'
+            model: 'Meal'
         })
         .exec();
         res.status(200).json(menu);

@@ -10,36 +10,50 @@ const Meal = (props) => {
     const { user } = useContext(AuthContext);
     const [isLiked, setLiked] = useState(props.isLiked);
     const [favoritesCount, setFavoritesCount] = useState(props.favoritesCount);
+    const { onLikeChange } = props;
 
     const handleLike = async () => {  
         try {
             if (isLiked) {
-                await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
+                response = await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
                     data: { mealId: props.id } 
                 });
                 setFavoritesCount(favoritesCount - 1);
             } else {
-                await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
+                response = await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
                     { mealId: props.id }
                 );
                 setFavoritesCount(favoritesCount + 1);
             }
             setLiked(!isLiked);
+            if (response && response.data && response.data.success && response.data.meal) {
+                const updatedMeal = response.data.meal;
+                if (onLikeChange) {
+                    onLikeChange(updatedMeal._id, updatedMeal.favoritesCount);
+                }
+            } else if (onLikeChange) {
+                onLikeChange(); 
+            }
         } catch (error) {
             console.error('Error toggling favorite meal:', error);
         }
     };
 
+    const isMenu = props.location === "menu";
     const isFavorites = props.location === "favorites";
+    const isPopular = props.location === "popular";
 
     return (
-        <View style={isFavorites ? styles.favoritesContainer : styles.menusContainer}>
+        <View style={isMenu ? styles.menusContainer : styles.favoritesContainer}>
             <View style={styles.textContainer}>
-                <Text style={isFavorites ? styles.favoritesItem : styles.menusItem}>{props.name}</Text>
-                {isFavorites && (
+                <Text style={isMenu ? styles.menusItem : styles.favoritesItem}>{props.name}</Text>
+                {!isMenu && (
                     <Text style={styles.diningHall}>{props.diningHall}</Text>
                 )}
             </View>
+            {isPopular && (
+                <Text style={styles.favoritesCount}>{props.favoritesCount}</Text>
+            )}
             <Pressable onPress={handleLike} style={styles.heartContainer}>
                 <FontAwesome 
                     name={isLiked ? "heart" : "heart-o"} 
@@ -47,7 +61,6 @@ const Meal = (props) => {
                     color="white" 
                 />
             </Pressable>
-            <Text style={styles.favoritesCount}>{favoritesCount}</Text>
         </View>
     );
 };
@@ -59,12 +72,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#467FB6',
         width: '100%',
         borderRadius: 10,
-        marginTop: 10,
-        paddingHorizontal: 15,
-        height: 75,
+        marginVertical: 5,
+        paddingHorizontal: 20,
+        height: 70,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        alignSelf: 'center'
     },
     menusContainer: {
         backgroundColor: '#467FB6',
@@ -84,7 +98,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flexDirection: 'column',
-        width: '80%',
+        width: '87%',
     },
     favoritesItem: {
         color: 'white',
@@ -108,7 +122,7 @@ const styles = StyleSheet.create({
     },
     favoritesCount: {
         color: 'white',
-        fontSize: 12,
-        fontWeight: '500',
+        paddingTop: 2,
+        paddingRight: 5
     }
 });

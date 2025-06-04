@@ -1,23 +1,25 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useContext, useEffect, useState } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
+import { useContext, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
 
 
 const FoodTruck = ({
   truck,
-  onMenu,
   isOpen = false,
   closeTime = "N/A",
-  nextOpenTime = "Unavailable"
+  nextOpenTime = "Unavailable",
+  location,
+  isFavorited=false
 }) => {
-  const [isFavorited, setFavorited] = useState( false );
-  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const url = config.BASE_URL;
   const { user } = useContext(AuthContext);
+
+  const [favorited, setFavorited] = useState( isFavorited );
+  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const getFoodTruck = async () => {
     try {
@@ -29,17 +31,19 @@ const FoodTruck = ({
   };
 
   useEffect(() => {
-    if (user && Array.isArray(user.favoriteFoodTrucks)) {
+    if (location === 'favorites') {
+      setFavorited(true);
+    } else if (user && Array.isArray(user.favoriteFoodTrucks)) {
       setFavorited(user.favoriteFoodTrucks.includes(truck._id));
     }
     getFoodTruck();
-  }, [user, truck._id]);
+  }, [user?.favoriteFoodTrucks, truck._id, location]);
 
 
 const handleFav = async () => {
   if (!user) return;
 
-  const wasFavorited = isFavorited;
+  const wasFavorited = favorited;
   const updatedCount = wasFavorited ? favoriteCount - 1 : favoriteCount + 1;
 
   try {
@@ -55,21 +59,25 @@ const handleFav = async () => {
 };
 
   return (
-    <View style={styles.cardContainer}>
-      <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-        {truck.name}
-      </Text>
-      { onMenu? 
-        <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
-        <View/>
-      }
+    <View style={location === 'menus' ? styles.menusContainer : styles.otherContainer}>
+      <View style={styles.nameTimeContainer}>
+        <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+          {truck.name}
+        </Text>
+        { location === 'menus'? 
+          <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
+          <View/>
+        }
+      </View>
       <Pressable onPress={handleFav} style={styles.heartContainer}>
+        {location == 'popular' && (
+            <Text style={styles.likeCount}>{favoriteCount}</Text>
+        )}
         <FontAwesome 
-          name={isFavorited ? "heart" : "heart-o"} 
+          name={favorited ? "heart" : "heart-o"}
           size={20} 
           color="white" 
         />
-        <Text style={styles.time}>{favoriteCount}</Text>
       </Pressable>
     </View>
   );
@@ -79,15 +87,31 @@ export default FoodTruck;
 
 const styles = StyleSheet.create({
   cardContainer: {
+
+  },
+  menusContainer: {
     backgroundColor: '#467FB6',
-    width: '100%',
+    width: '90%',
     borderRadius: 10,
-    marginTop: 10,
-    paddingHorizontal: 15,
+    marginVertical: 5,
+    paddingHorizontal: 20,
     height: 70,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    alignSelf: 'center'
+  },
+  otherContainer: {
+    backgroundColor: '#467FB6',
+    width: '100%',
+    borderRadius: 10,
+    marginVertical: 5,
+    paddingHorizontal: 20,
+    height: 70,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   cardContent: {
     flex: 1,   // take up all available space except the heart
@@ -96,6 +120,7 @@ const styles = StyleSheet.create({
   },
   nameTimeContainer: {
     flexDirection: 'column',
+    width: '85%'
   },
   name: {
     color: 'white',
@@ -106,10 +131,15 @@ const styles = StyleSheet.create({
     color: 'white',
     paddingTop: 2,
   },
+  likeCount: {
+    color: 'white',
+    paddingTop: 2,
+    paddingRight: 5
+  },
   heartContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 30,
     flexShrink: 0,
-    minWidth: 50,
   }
 });

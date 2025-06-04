@@ -1,13 +1,12 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useContext, useEffect, useState } from 'react';
-import Comment from '../components/comment.jsx';
-import config from '../config';
-import { AuthContext } from '../context/AuthContext';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import FoodTruck from '../components/foodTruck.jsx';
 import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
+import config from '../config';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -15,38 +14,18 @@ export default function Tab() {
   const { user, setUser } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [favorites, setFavorites] = useState([]);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
   const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
-
-  const fetchFavoriteMeals = async () => {
-    try {
-      const mealData = await Promise.all(
-        favorites.map(async (id) => {
-          try {
-            const response = await axios.get(`${url}/api/meals/${id}`);
-            return response.data;
-          } catch (err) {
-            console.warn(`Meal ID ${id} not found`);
-            return null;  // Skip missing meals
-          }
-        })
-      );
-      setFavoriteMeals(mealData.filter(meal => meal !== null));
-    } catch (err) {
-      console.error(err);
-      setError(err);
-    }
-  };
 
   const getFavorites = async () => {
     try {
       if (!user || !user.userId) throw new Error('User not properly authenticated');
 
-      const response = await axios.get(`${url}/api/users/${user.userId}`);
-      setFavorites(response.data.favorites || []);
-      setFavoriteFoodTrucks(response.data.favoriteFoodTrucks || []);
+      const meals = await axios.get(`${url}/api/users/${user.userId}/favorite-meals`);
+      setFavoriteMeals(meals.data.favoriteMeals || []);
 
+      const trucks = await axios.get(`${url}/api/users/${user.userId}/favorite-trucks`);
+      setFavoriteFoodTrucks(trucks.data.favoriteFoodTrucks || []);
     } catch (error) {
       console.error(error);
       setError(error);
@@ -68,14 +47,22 @@ export default function Tab() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (favorites.length > 0) {
-      fetchFavoriteMeals();
-    }
-  }, [favorites]);
+  // useEffect(() => {
+  //   if (favoriteMealIds.length > 0) {
+  //     fetchFavoriteMeals();
+  //   }
+  //   if (favoriteFoodTruckIds.length > 0) {
+  //     fetchFavoriteFoodTrucks();
+  //   }
+  // }, [favoriteMealIds, favoriteFoodTruckIds]);
 
   const hereTodayMeals = favoriteMeals.filter(meal => meal.hereToday);
+  // console.log(hereTodayMeals);
   const notHereTodayMeals = favoriteMeals.filter(meal => !meal.hereToday);
+  // console.log(notHereTodayMeals);
+
+  const hereTodayFoodTrucks = favoriteFoodTrucks.filter(truck => truck.hereToday);
+  const notHereTodayFoodTrucks = favoriteFoodTrucks.filter(truck => !truck.hereToday);
 
   return (
     <ScrollView style={styles.container}>
@@ -87,35 +74,65 @@ export default function Tab() {
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Available Now</Text>
+        <Text style={styles.heading}>Here Today</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Meals</Text>
           {
-          favoriteMeals.map(meal => (
-            <Meal
-              key={meal._id}
-              name={meal.name}
-              diningHall={meal.diningHall}
-              isLiked={true}
-              location={'favorites'}
-            />
-          ))
+            hereTodayMeals.map(meal => (
+              <Meal
+                key={meal._id}
+                name={meal.name}
+                diningHall={meal.diningHall}
+                isLiked={true}
+                location={'favorites'}
+              />
+            ))
           }
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
+          {
+            hereTodayFoodTrucks.map(truck => (
+              <FoodTruck
+                key={truck._id}
+                truck={truck}
+                location={'favorites'}
+                isFavorited={true}
+              />
+            ))
+          }
         </View>
       </View>
 
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Later Today</Text>
+        <Text style={styles.heading}>Not Here Today</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Meals</Text>
+          {
+            notHereTodayMeals.map(meal => (
+              <Meal
+                key={meal._id}
+                name={meal.name}
+                diningHall={meal.diningHall}
+                isLiked={true}
+                location={'favorites'}
+              />
+            ))
+          }
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
+          {
+            notHereTodayFoodTrucks.map(truck => (
+              <FoodTruck
+                key={truck._id}
+                truck={truck}
+                isFavorited={true}
+              />
+            ))
+          }
         </View>
       </View>
     </ScrollView>
@@ -151,6 +168,6 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 1)',
   },
   padding: {
-    paddingTop: 15
+    paddingTop: 40
   }
 });

@@ -17,4 +17,7 @@ router.get('/:id', foodTruckController.getFoodTruckById);
 // favorite a food truck
 router.post('/:truckId/favorite', foodTruckController.favoriteFoodTruck);
 
+// get favorite foodtrucks
+router.get('/popular', foodTruckController.getPopularFoodTrucks)
+
 module.exports = router;
