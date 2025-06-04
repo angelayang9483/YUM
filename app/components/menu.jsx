@@ -20,6 +20,7 @@ import {
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import Comment from './comment.jsx';
+import { initializeMealAndTruckListeners } from '../utils/helpers.js';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
@@ -36,7 +37,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
-
   const [fontsLoaded] = useFonts({
     'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
     'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
@@ -46,34 +46,47 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
   });
 
-  const fetchFavoriteMeals = (mealIdToUpdate, newCount) => {
-    if (mealIdToUpdate && typeof newCount !== 'undefined') {
+  const fetchFavoriteMeals = (meal, adding) => {
+    if (meal) {
         setMenu(prevMenu => 
           prevMenu.map(period => ({
             ...period,
             data: period.data.map(station => ({
               ...station,
-              data: station.data.map(meal => 
-                meal._id === mealIdToUpdate 
-                  ? { ...meal, favoritesCount: newCount } 
-                  : meal
+              data: station.data.map(mealToUpdate => 
+                mealToUpdate._id === meal._id 
+                  ? meal
+                  : mealToUpdate
               ),
             })),
           }))
         );
+        if(!adding) {
+            setFavoriteMeals(prev => prev.filter(a => a._id !== meal._id));
+        } else {
+            setFavoriteMeals(prev => [...prev, meal]);
+        }
       }
     if (!user) {
       setFavoriteMeals([]);
       return;
     }
-    axios
+    if (!meal) {
+      axios
         .get(`${url}/api/users/${user.userId}/favorite-meals`)
-        .then(res => setFavoriteMeals(res.data.favoriteMeals))
-        .catch(err => console.error(err));
+        .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+        .catch(err => {
+          console.error('Error fetching favorite meals:', err);
+          setFavoriteMeals([]);
+      });
+    }
   };
 
   useEffect(() => {
-    fetchFavoriteMeals();
+    const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, null, "MENU.JSX");
+    return () => {
+      cleanup();
+    };
   }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
@@ -177,12 +190,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const handleAddComment = async () => {
     if (comment.trim() === '') return;
     try {
-      console.log('Starting comment creation with:', {
-        content: comment,
-        diningHallName: diningHallId,
-        userId: user.userId
-      });
-
       const response = await axios.post(`${url}/api/comments`, {
         content: comment,
         diningHallName: diningHallId,
@@ -192,14 +199,12 @@ const Menu = ({ visible, onClose, diningHallId }) => {
       console.log("Full response from comment creation:", response);
       
       const commentId = response.data.comment._id;
-      console.log("Response looks like this: ", response);
-      console.log('Extracted commentId =', commentId);
       
       if (!commentId) {
         console.warn('commentId is undefined; aborting link step.');
         return;
       }
-
+      
       console.log('Attempting to link comment to user...');
       await axios.post(`${url}/api/comments/${commentId}/link`, {
         userId: user.userId
@@ -209,9 +214,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
       await axios.post(`${url}/api/comments/${commentId}/toDiningHall`, {
         diningHallId: diningHallId
       });
-
-      console.log("Posted to comments");
-      console.log('About to clear comment input...');
+      
       setComment('');
       console.log('Comment input cleared');
 
@@ -307,6 +310,22 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                   <View style={styles.listContainer}>
                     <ScrollView
                       showsVerticalScrollIndicator={false}
+                      sections={selectedPeriod.data}
+                      keyExtractor={(item, idx) => item._id + idx}
+                      renderSectionHeader={({ section }) => (
+                        <Text style={styles.sectionHeader}>{section.title.toLowerCase()}</Text>
+                      )}
+                      renderItem={({ item, idx }) => (
+                        <Meal
+                          key={item._id + idx}
+                          id={item._id}
+                          name={item.name}
+                          diningHall={item.diningHall}
+                          isFavorited={favoriteMeals.some(a => a._id === item._id)}
+                          location={'menu'}
+                          favoritesCount={item.favoritesCount}
+                        />
+                      )}
                       contentContainerStyle={styles.sectionListContent}
                     >
                       {selectedPeriod.data.map((section, sectionIndex) => (

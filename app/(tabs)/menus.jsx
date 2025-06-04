@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useFonts } from 'expo-font';
 import { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SearchBar } from 'react-native-elements';
@@ -7,30 +7,26 @@ import DiningHall from '../components/diningHall.jsx';
 import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import { useFonts } from 'expo-font';
+import { getClosingTime, getClosingTruckTime, getDiningHalls, getFoodTrucks, getNextOpenTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isDiningHallOpen, isFoodTruckOpen } from '../utils/helpers.js';
 
 export default function Tab() {
   const url = config.BASE_URL;
-  const router = useRouter();
   const { user } = useContext(AuthContext);
 
   const [diningHalls, setDiningHalls] = useState([]);
+  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
+  const [foodTrucks, setFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
-
-  const [foodTrucks, setFoodTrucks] = useState([]);
-  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
-  const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
-
   const [now, setNow] = useState(new Date());
-
-  const [mealPeriod, setMealPeriod] = useState('none');
-
   const [searchValue, setSearchValue] = useState('');
+  const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
   const [filteredHalls, setFilteredHalls] = useState([]);
-  const [filteredTrucks, setFilteredTrucks] = useState([]);
-
+  const [filteredFoodTrucks, setFilteredFoodTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isScrapingCheckDone, setIsScrapingCheckDone] = useState(false);
+  const [isInitialDataFetchAttemptDone, setIsInitialDataFetchAttemptDone] = useState(false);
+  const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
 
   const [fontsLoaded] = useFonts({
     'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
@@ -42,281 +38,166 @@ export default function Tab() {
   });
 
 
-  const mealPeriodDict = {
-    'Breakfast': 0,
-    'Lunch': 1,
-    'Dinner': 2,
-    'Extended Dinner': 3,
+  
+  // New useEffect to manage the main loading state based on completion flags
+useEffect(() => {
+  if (isScrapingCheckDone && isInitialDataFetchAttemptDone) {
+    console.log('Both scraping check and data fetch attempt are done. Hiding loader.');
+    setLoading(false);
   }
-  
-  const mealPeriods = ['Breakfast', 'Lunch', 'Dinner', 'Extended Dinner'];
+}, [isScrapingCheckDone, isInitialDataFetchAttemptDone]);
 
-  function getNextMealPeriodIndex( hall ) {
-    const hours = now.getHours();
-    
-    for (let i = 0; i < mealPeriods.length; i++) {
-      const period = mealPeriods[i];
-      const matchingHours = hall.hours.find(p => p.label.toLowerCase().trim() === period.toLowerCase().trim());
-      if (!matchingHours || !matchingHours.open) continue; // skip if this hall doesn't have that period
-    
-      let openHour = parseInt(matchingHours.open.split(':')[0], 10);
-      if (matchingHours.open.toUpperCase().includes('P.M.') && openHour !== 12) {
-        openHour += 12;
+// New useEffect for checking scraping status
+useEffect(() => {
+  const checkScrapingLoop = async () => {
+    let scrapingIsActive = true;
+    console.log('Starting scraping status check loop...');
+    let attempts = 0;
+    const maxAttempts = 30; // Max ~1 minute of checking if polling every 2s
+
+    while (scrapingIsActive && attempts < maxAttempts) {
+      attempts++;
+      try {
+        const response = await axios.get(`${url}/scrape-status`);
+        console.log('Scrape status response:', response.data);
+        scrapingIsActive = response.data.isScraping;
+        if (!scrapingIsActive) {
+          console.log('Scraping is no longer active. Exiting loop.');
+          break; 
+        }
+      } catch (err) {
+        console.error('Scraping status check error:', err.message, '- Assuming scraping is not critical or has an issue, proceeding.');
+        scrapingIsActive = false; 
+        break;
       }
-  
-      if (openHour > hours) {
-        return i;
+      if (scrapingIsActive) { 
+        console.log(`Scraping still active (attempt ${attempts}), waiting 2 seconds...`);
+        await new Promise(res => setTimeout(res, 2000));
       }
     }
+    if (attempts >= maxAttempts && scrapingIsActive) {
+      console.warn('Max attempts reached for scraping check; proceeding as if scraping is done/not critical.');
+    }
+    console.log('Scraping check loop finished.');
+    setIsScrapingCheckDone(true);
+  };
 
-    // if nothing found, loop back to the first meal period
-    return 0;
-  }
+  checkScrapingLoop();
+}, []); // Run once on mount to check scraping status
 
-  const getDiningHalls = async () => {
+// New useEffect for fetching initial data, triggered after scraping check is done (or assumed done)
+useEffect(() => {
+  const fetchInitialData = async () => {
+    console.log('Attempting to fetch initial dining halls and food trucks data...');
     try {
-      const response = await axios.get(`${url}/api/dininghalls`);
-      console.log('Dining halls data received:', response.data?.length || 0, 'halls');
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error('Invalid dining halls data format:', response.data);
-        return;
-      }
-      
-      setDiningHalls(response.data);
+      // Using Promise.allSettled to ensure all fetches complete, regardless of individual failures
+      const results = await Promise.allSettled([
+        getDiningHalls(setDiningHalls), // Assumes getDiningHalls updates its own state and handles its errors
+        getFoodTrucks(setFoodTrucks)   // Assumes getFoodTrucks updates its own state and handles its errors
+      ]);
+      console.log('Initial data fetch attempts completed.');
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Fetch operation ${index === 0 ? 'getDiningHalls' : 'getFoodTrucks'} failed:`, result.reason);
+        }
+      });
     } catch (error) {
-      console.error('Error fetching dining halls:', error.message);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-      }
+      // This catch is for unforeseen issues in the Promise.allSettled orchestration itself
+      console.error("Critical error during initial data fetch orchestration:", error);
+    } finally {
+      setIsInitialDataFetchAttemptDone(true);
     }
   };
+
+  if (isScrapingCheckDone) {
+    console.log('Scraping check is done (or assumed done), proceeding to fetch initial data.');
+    fetchInitialData();
+  } else {
+    console.log('Waiting for scraping check to complete before fetching data.');
+  }
+}, [isScrapingCheckDone]); // Trigger data fetch when scraping check is done
+
   
-  function isDiningHallOpen( hall ) {  
-    const hours = now.getHours();
-
-    if (!hall || !hall.hours || hall.hours.length === 0) {
-      return false;
-    }
-    
-    const todayString = now.toDateString();
-
-    for (const period of hall.hours) {
-      if (!period.label || !period.open || !period.close) continue;
+  // supposed to run every 30 minutes
+  useEffect(() => {
+    setNow(new Date());
   
-      // Compare period label to mealPeriodMore actions
-      if (period.label.toLowerCase().trim() !== mealPeriod.toLowerCase().trim()) continue;
-
-      const openTimeString = period.open.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
-      const closeTimeString = period.close.replace(/\s*(a\.m\.|p\.m\.)$/i, ' $1').trim();
-      console.log("closeTimeString: ", closeTimeString);
-
-      let openTime = parseInt(openTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(openTimeString) && openTime !== 12) openTime += 12;
-
-      let closeTime = parseInt(closeTimeString.split(':')[0], 10);
-      if (/p\.m\./i.test(closeTimeString) && closeTime !== 12) closeTime += 12;
-      if (closeTimeString === "12:00 a.m.") closeTime = 24;
-
-      console.log(`Checking: ${hall.name}, ${period.label}, ${openTime} - ${closeTime}`);
-      console.log(hours);
-      console.log(closeTime);
-
-      if (hours >= openTime && hours < closeTime) {
-        console.log('here');
-        return true;
-      }
-    }  
-    return false;
-  }  
-
-  function getNextOpenTime( hall ) {
-    let nextIndex = getNextMealPeriodIndex( hall );
-    let nextTime = hall.hours[ nextIndex ]
-    if (mealPeriod === "Extended Dinner") return 'N/A'
-    return (
-      nextTime?.open || 'N/A'
-    )
-  }
-
-  function getClosingTime ( hall ) {
-    // check for extended dinner
-    if ( mealPeriod === "Dinner" && hall.hours[3].open ) {
-      return hall.hours[3].close;
-    }
-    else {
-      return (hall.hours[mealPeriodDict[mealPeriod]]?.close)
-    }
-  }
-
-  // get the dining halls and food trucks
-  const getFoodTrucks = async () => {
-    const response = await axios.get(`${url}/api/foodtrucks/here`);
-    console.log("Food truck data response: ", response.data);
-    setFoodTrucks(response.data);
-  }
-  
-  const isFoodTruckOpen = ( truck ) => {
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    if (!truck || !truck.hours || truck.hours.length === 0) {
-      return false;
-    }
-
-    if (truck.hours[0].label === "Evening") {
-      if (hours >= 17 && hours < 21) {
-        if (hours === 20 && minutes >= 30) return false;
-        return true;
-      }
-    } else if (truck.hours[0].label === "Late Night") {
-      if (hours >= 21 || hours < 1) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  const getNextOpenTruckTime = ( truck ) => {
-    const hours = now.getHours();
-
-    if (!truck || !truck.hours || truck.hours.length === 0) {
-      return false;
-    }
-
-    if (truck.hours[0].label === "Evening") {
-      if (hours < 17) {
-        return "5:00 p.m.";
-      }
-    } else if (truck.hours[0].label === "Late Night") {
-      if (hours < 21) {
-        return "9:00 p.m.";
-      }
-    }
-
-    return "N/A";
-  }
-
-  const getClosingTruckTime = ( truck ) => {
-    if (!truck || !truck.hours || truck.hours.length === 0) {
-      return false;
-    }
-
-    if (truck.hours[0].label === "Evening") {
-      return "8:30 p.m.";
-    } else if (truck.hours[0].label === "Late Night") {
-      return "12:00 a.m.";
-    }
-  }
-
-  // display loading screen if it is still scraping info
-  useEffect(() => {
-    const checkScraping = async () => {
-      let scraping = true;
-      while (scraping) {
-        try {
-          const response = await axios.get(`${url}/scrape-status`);
-          console.log(response.data);
-          scraping = response.data.isScraping;
-          // If we have data, don't keep waiting for scraping status
-          if (!scraping || diningHalls.length > 0) {
-            console.log('Data loaded or scraping complete, showing content');
-            setLoading(false);
-            break;  // Exit the loop once we have data
-          }
-        } catch (err) {
-          console.log('Scraping status check error - checking if data is available');
-          // If we have data despite scraping status error, show content
-          if (diningHalls.length > 0) {
-            console.log('Data available, showing content despite scraping error');
-            setLoading(false);
-            break;
-          }
-          await new Promise(res => setTimeout(res, 2000));
-        }
-        await new Promise(res => setTimeout(res, 1000));
-      }
-    };
-
-    checkScraping();
-  }, [diningHalls]);
-
-  useEffect(() => {
-    console.log('Getting dining halls');
-    getDiningHalls();
-    getFoodTrucks();
-  }, []);
-
-  // rechecks meal period every 30 minutesAdd commentMore actions
-  useEffect(() => {
-    const updateTimeAndMealPeriod = () => {
-    const currentTime = new Date();
-    setNow(currentTime);
-
-    const hours = currentTime.getHours();
-
-      const timeString = now.toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-      let currentPeriod = 'none';
-      if (hours >= 0 && hours < 11) currentPeriod = 'Breakfast';
-      else if (hours >= 11 && hours < 17) currentPeriod = 'Lunch';
-      else if (hours >= 17 && hours < 22) currentPeriod = 'Dinner';
-      else if (hours >= 21 || hours < 25) currentPeriod = 'Extended Dinner';
-
-      setMealPeriod(currentPeriod);
-    };
-
-    updateTimeAndMealPeriod();
-
     const interval = setInterval(() => {
-      updateTimeAndMealPeriod()
+      setNow(new Date());
     }, 30 * 60 * 1000);
   
     return () => clearInterval(interval);
   }, []);
+  
+  const fetchFavoriteFoodTrucks = (foodTruck, adding) => {
+    if (foodTruck) {
+        if(!adding) {
+            setFavoriteFoodTrucks(prev => prev.filter(a => a._id !== foodTruck._id));
+        } else {
+            setFavoriteFoodTrucks(prev => [...prev, foodTruck]);
+        }
+      }
+    if (!user) {
+      setFavoriteFoodTrucks([]);
+      return;
+    }
+    if (!foodTruck) {
+      axios
+        .get(`${url}/api/users/${user.userId}/favorite-trucks`)
+        .then(res => setFavoriteFoodTrucks(res.data.favoriteFoodTrucks || []))
+        .catch(err => {
+          console.error('Error fetching favorite food trucks:', err);
+          setFavoriteFoodTrucks([]);
+      });
+    }
+  };
+
+  useEffect(() => {
+    const cleanup = initializeMealAndTruckListeners(null, fetchFavoriteFoodTrucks, "MENUS.JSX");
+    return () => {
+      cleanup();
+    }
+  }, [user]);
 
   // checks if dining halls are closed or open
   useEffect(() => {
-    if (!diningHalls || diningHalls.length === 0 || !foodTrucks || foodTrucks.length === 0) {
+    if (!diningHalls || diningHalls.length === 0) {
       console.log('Waiting for dining halls data...');
       return;
     }
   
     console.log('Processing dining halls:', diningHalls);
-    const openHalls = [];
-    const closedHalls = [];
+    const open = [];
+    const closed = [];
   
     diningHalls.forEach(hall => {
-      console.log('Checking hall:', hall.name, 'for period:', mealPeriod);
-      if (isDiningHallOpen(hall)) {
-        openHalls.push(hall);
+      if (isDiningHallOpen(hall, now)) {
+        open.push(hall);
       } else {
-        closedHalls.push(hall);
+        closed.push(hall);
       }
     });
-
-    console.log('Processing food trucks: ', foodTrucks);
-    const openTrucks = [];
-    const closedTrucks = [];
-
-    foodTrucks.forEach(truck => {
-      if (isFoodTruckOpen(truck)) {
-        openTrucks.push(truck);
-      } else {
-        closedTrucks.push(truck);
-      }
-    })
   
-    console.log('Open:', openHalls);
-    setOpenDiningHalls(openHalls);
-    setClosedDiningHalls(closedHalls);
-    setOpenFoodTrucks(openTrucks);
-    setClosedFoodTrucks(closedTrucks);
-  }, [diningHalls, mealPeriod]);
+    console.log('Open:', open);
+    setOpenDiningHalls(open);
+    setClosedDiningHalls(closed);
+
+
+    console.log('Processing food trucks:', foodTrucks)
+      const openFT = [];
+      const closedFT = [];
+      foodTrucks.forEach(truck => {
+        if (isFoodTruckOpen(truck, now)) {
+          openFT.push(truck);
+        } else {
+          closedFT.push(truck);
+        }
+      });
+      console.log('Open:', openFT);
+      setOpenFoodTrucks(openFT);
+      setClosedFoodTrucks(closedFT);
+ 
+  }, [diningHalls, foodTrucks, now]);
 
   
   const searchFunc = (text) => {
@@ -325,104 +206,105 @@ export default function Tab() {
     const filteredDiningHalls = text.trim() === '' ? [] : 
       diningHalls.filter((hall) => 
         hall.name.toLowerCase().includes(text.toLowerCase().trim())
-    );
-    const filteredFoodTrucks = text.trim() === '' ? [] : 
+      );
+    setFilteredHalls(filteredDiningHalls);
+    const filteredFT = text.trim() === '' ? [] : 
       foodTrucks.filter((truck) => 
         truck.name.toLowerCase().includes(text.toLowerCase().trim())
-    );
-
-    setFilteredHalls(filteredDiningHalls);
-    setFilteredTrucks(filteredFoodTrucks);
-    console.log('FILTERED TRUCKS: ', filteredTrucks);
+      );
+    setFilteredFoodTrucks(filteredFT);
   };
 
   // Add logging to render function
-  const renderContent = ({ item, section }) => {
+  const renderContent = ({ section }) => {
     // If searching, show only filtered results without sections
     if (searchValue.trim() !== '') {
       return (
         <View>
-          <Text style={styles.subheading}>Search Results</Text>
+          <Text style={styles.heading}>search results</Text>
           <Text style={styles.subheading}>DINING HALLS</Text>
-          {filteredHalls.map((hall) => (
-            <View key={hall._id}>
-              <DiningHall
-                style={styles.diningHall}
-                id={hall._id}
-                name={hall.name}
-                isOpen={isDiningHallOpen(hall)}
-                closeTime={isDiningHallOpen(hall) ? getClosingTime(hall) : null}
-                nextOpenTime={!isDiningHallOpen(hall) ? getNextOpenTime(hall) : null}
-              />
-            </View>
-          ))}
+          {filteredHalls.length > 0 ? (
+            filteredHalls.map((hall) => (
+              <View key={hall._id}>
+                <DiningHall
+                  style={styles.diningHall}
+                  id={hall._id}
+                  name={hall.name}
+                  isOpen={isDiningHallOpen(hall, now)}
+                  closeTime={isDiningHallOpen(hall, now) ? getClosingTime(hall, now) : null}
+                  nextOpenTime={!isDiningHallOpen(hall, now) ? getNextOpenTime(hall, now) : null}
+                />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noMatch}>No matching dining halls</Text>
+          )}
           <Text style={styles.subheading}>FOOD TRUCKS</Text>
-          {filteredTrucks.map((truck) => (
-            <View key={truck._id}>
-              <FoodTruck
-                key={truck._id} 
-                truck={truck} 
-                isOpen={isFoodTruckOpen(truck)}
-                closeTime={isFoodTruckOpen(truck) ? getClosingTruckTime(truck) : null}
-                nextOpenTime={!isFoodTruckOpen(truck) ? getNextOpenTruckTime(truck) : null}
-                location={'menus'}
-              />
-            </View>
-          ))
-          }
-        </View>
+          {filteredFoodTrucks.length > 0 ? (
+            filteredFoodTrucks.map((truck) => (
+              <View key={truck._id}>
+                <FoodTruck
+                  truck={truck}
+                  isOpen={isFoodTruckOpen(truck, now)}
+                  closeTime={isFoodTruckOpen(truck, now) ? getClosingTruckTime(truck, now) : null}
+                  nextOpenTime={!isFoodTruckOpen(truck, now) ? getNextOpenTruckTime(truck, now) : null}
+                  location="menus"
+                  isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+                />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noMatch}>No matching food trucks</Text>
+          )}
+      </View>
       );
     }
-
     // Normal view with sections
-    return (
-      <View>
-        <Text style={styles.subheading}>DINING HALLS</Text>
-        {section.title === 'open now' ? openDiningHalls.map((hall) => (
-          <View key={hall._id}>
-            <DiningHall
-              style={styles.diningHall}
-              id={hall._id}
-              name={hall.name}
-              isOpen={true}
-              closeTime={getClosingTime(hall)}
-            />
-          </View>
-        )) : closedDiningHalls.map((hall) => (
-          <View key={hall._id}>
-            <DiningHall
-              style={styles.diningHall}
-              id={hall._id}
-              name={hall.name}
-              isOpen={false}
-              nextOpenTime={getNextOpenTime(hall)}
-            />
-          </View>
-        ))}
-        <Text style={styles.subheading}>FOOD TRUCKS</Text>
-        {section.title === 'open now' ? openFoodTrucks.map((truck) => (
-          <View key={truck._id}>
-            <FoodTruck 
-              key={truck._id} 
-              truck={truck} 
-              isOpen={true}
-              closeTime={getClosingTruckTime(truck)}
-              location={'menus'}
-            />
-          </View>
-        )) : closedFoodTrucks.map((truck) => (
-          <View key={truck._id}>
-            <FoodTruck 
-              key={truck._id} 
-              truck={truck} 
-              isOpen={false}
-              nextOpenTime={getNextOpenTruckTime(truck)}
-              location={'menus'}
-            />
-          </View>
-        ))}
-
-      </View>
+  return (
+    <View>
+      <Text style={styles.subheading}>DINING HALLS</Text>
+      {section.title === 'open now' ? openDiningHalls.map((hall) => (
+        <View key={hall._id}>
+          <DiningHall
+            style={styles.diningHall}
+            id={hall._id}
+            name={hall.name}
+            isOpen={true}
+            closeTime={getClosingTime(hall, now)}
+          />
+        </View>
+      )) : closedDiningHalls.map((hall) => (
+        <View key={hall._id}>
+          <DiningHall
+            style={styles.diningHall}
+            id={hall._id}
+            name={hall.name}
+            isOpen={false}
+            nextOpenTime={getNextOpenTime(hall, now)}
+          />
+        </View>
+      ))}
+      <Text style={styles.subheading}>FOOD TRUCKS</Text>
+      {section.title === 'open now' ? openFoodTrucks.map((truck) => (
+          <FoodTruck 
+            key={truck._id}
+            truck={truck}
+            isOpen={true}
+            closeTime={getClosingTruckTime(truck, now)}
+            location="menus"
+            isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+          />
+      )) : closedFoodTrucks.map((truck) => (
+          <FoodTruck 
+            key={truck._id} 
+            truck={truck} 
+            isOpen={false}
+            nextOpenTime={getNextOpenTruckTime(truck, now)}
+            location="menus"
+            isFavorited={favoriteFoodTrucks.some((ft) => ft._id === truck._id)}
+          />
+      ))}
+    </View>
     );
   };
 
@@ -436,6 +318,32 @@ export default function Tab() {
   }
 
   return (
+        // <Text style={styles.heading}>Open Now</Text>
+        // <View style={styles.subsection}>
+        //   <Text style={styles.subheading}>Dining Halls</Text>
+        //   {
+        //     openDiningHalls.map(hall => (
+        //       <DiningHall
+        //         key={hall._id}
+        //         name={hall.name}
+        //         isOpen={true}
+        //         closeTime={ getClosingTime(hall) }
+        //         nextOpenTime={null}
+        //       />
+        //     ))
+        //   }
+        // </View>
+        // <View style={styles.subsection}>
+        //   <Text style={styles.subheading}>Food Trucks</Text>
+          // {
+          //   foodTrucks.map(truck => (
+          //     <FoodTruck 
+          //       key={truck._id} 
+          //       truck={truck} 
+          //     />
+          //   ))
+          // }
+        // </View>
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
@@ -448,6 +356,8 @@ export default function Tab() {
             containerStyle={styles.searchBar}
             platform="default"
             lightTheme
+            searchIcon={{ name: 'search', size: 24 }}
+            clearIcon={{ name: 'clear', size: 24 }}
           />
         </View>
         <SectionList
@@ -489,7 +399,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   sectionListContent: {
-    padding: 0
+    paddingHorizontal: 15,
   },
   section: {
     width: '100%',
@@ -545,5 +455,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderTopWidth: 0,
     paddingHorizontal: 0,
+    marginBottom: 10,
+  },
+  noMatch: {
+    fontSize: 15,
+    fontFamily: 'Gill-Sans-Bold',
+    alignSelf: 'center',
+    padding: 10,
   },
 });

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import FoodTruck from '../components/foodTruck.jsx';
@@ -7,15 +6,15 @@ import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import { initializeMealAndTruckListeners } from '../utils/helpers.js';
+
 import { useFonts } from 'expo-font';
 
 export default function Tab() {
-  const [favorites, setFavorites] = useState([]);
+  const [favoriteMeals, setFavoriteMeals] = useState([]);
+  const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
   const url = config.BASE_URL;
-  const router = useRouter();
   const { user } = useContext(AuthContext);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [popularMeals, setPopularMeals] = useState([]);
   const [popularFoodTrucks, setPopularFoodTrucks] = useState([]);
   const [fontsLoaded] = useFonts({
@@ -31,12 +30,8 @@ export default function Tab() {
     try {
       const response = await axios.get(`${url}/api/meals/popular`);
       setPopularMeals(response.data);
-      console.log('popular meals:', popularMeals);
     } catch (err) {
       console.error("Error fetching popular meals:", err.message);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -44,12 +39,77 @@ export default function Tab() {
     try {
       const response = await axios.get(`${url}/api/foodtrucks/popular`);
       setPopularFoodTrucks(response.data);
-      console.log('popular food trucks:', response.data);
     } catch (err) {
       console.error('Error fetching popular food trucks:', err.message);
-      setError(err.message);
     }
   };
+
+  const fetchFavoriteMeals = (meal, adding) => {
+    if (meal) {
+        setPopularMeals(prev => prev.map(a => {
+            if(a._id === meal._id) {
+                return meal;
+            }
+            return a;
+        }))
+        
+        if(!adding) {
+            setFavoriteMeals(prev => prev.filter(a => a._id !== meal._id));
+        } else {
+            setFavoriteMeals(prev => [...prev, meal]);
+        }
+      }
+    if (!user) {
+      setFavoriteMeals([]);
+      return;
+    }
+    if (!meal) {
+      axios
+        .get(`${url}/api/users/${user.userId}/favorite-meals`)
+        .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+        .catch(err => {
+          console.error('Error fetching favorite meals:', err);
+          setFavoriteMeals([]);
+      });
+    }
+  };
+  const fetchFavoriteFoodTrucks = (foodTruck, adding) => {
+    if (foodTruck) {
+        setPopularFoodTrucks(prev => prev.map(a => {
+            if(a._id === foodTruck._id) {
+                return foodTruck;
+            }
+            return a;
+        }))
+        
+        if(!adding) {
+            setFavoriteFoodTrucks(prev => prev.filter(a => a._id !== foodTruck._id));
+        } else {
+            setFavoriteFoodTrucks(prev => [...prev, foodTruck]);
+        }
+      }
+    if (!user) {
+      setFavoriteFoodTrucks([]);
+      return;
+    }
+    if (!foodTruck) {
+      axios
+        .get(`${url}/api/users/${user.userId}/favorite-trucks`)
+        .then(res => setFavoriteFoodTrucks(res.data.favoriteFoodTrucks || []))
+        .catch(err => {
+          console.error('Error fetching favorite food trucks:', err);
+          setFavoriteFoodTrucks([]);
+      });
+    }
+  };
+
+  useEffect(() => {
+    const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, fetchFavoriteFoodTrucks, "POPULAR.JSX");
+    return () => {
+      cleanup();
+    };
+  }, [user]);
+
 
   useEffect(() => {
     fetchPopularMeals();
@@ -70,12 +130,13 @@ export default function Tab() {
         <Text style={styles.heading}>meals</Text>
         <View style={styles.subsection}>
           {
-          popularMeals.map(meal => (
+          popularMeals.map((meal, _idx) => (
             <Meal
-              key={meal._id}
+              key={meal._id + _idx}
+              id={meal._id}
               name={meal.name}
               diningHall={meal.diningHall}
-              isLiked={true}
+              isFavorited={favoriteMeals.some(a => a._id === meal._id)}
               location={'popular'}
               favoritesCount={meal.favoritesCount}
             />
@@ -90,7 +151,7 @@ export default function Tab() {
         <Text style={styles.heading}>food trucks</Text>
         <View style={styles.subsection}>
           {
-          popularFoodTrucks.map(foodTruck => (
+          popularFoodTrucks.map((foodTruck, _idx) => (
             // <FoodTruck
             //   key={foodTruck._id}
             //   name={foodTruck.name}
@@ -98,10 +159,11 @@ export default function Tab() {
             //   location={'favorites'}
             // />
             <FoodTruck
-              key={foodTruck._id}
+              key={foodTruck._id + _idx}
               truck={foodTruck}
+              isFavorited={favoriteFoodTrucks.includes(foodTruck._id)}
               location={'popular'}
-            />
+              />
           ))
           }
         </View>
@@ -140,6 +202,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Perpetua-MT-Regular'
   },
   padding: {
-    paddingTop: 40
+    paddingTop: 15
   }
 });
