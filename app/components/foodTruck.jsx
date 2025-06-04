@@ -59,7 +59,7 @@ const handleFav = async () => {
 };
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={location === 'menus' ? styles.menusContainer : styles.otherContainer}>
       <View style={styles.nameTimeContainer}>
         <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
           {truck.name}
@@ -87,8 +87,23 @@ export default FoodTruck;
 
 const styles = StyleSheet.create({
   cardContainer: {
+
+  },
+  menusContainer: {
     backgroundColor: '#467FB6',
     width: '90%',
+    borderRadius: 10,
+    marginVertical: 5,
+    paddingHorizontal: 20,
+    height: 70,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    alignSelf: 'center'
+  },
+  otherContainer: {
+    backgroundColor: '#467FB6',
+    width: '100%',
     borderRadius: 10,
     marginVertical: 5,
     paddingHorizontal: 20,
