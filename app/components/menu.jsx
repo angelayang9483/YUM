@@ -30,15 +30,38 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
 
-    useEffect(() => {
-    if (!user) return;
-    
+  const fetchFavoriteMeals = (mealIdToUpdate, newCount) => {
+    if (mealIdToUpdate && typeof newCount !== 'undefined') {
+        setMenu(prevMenu => 
+          prevMenu.map(period => ({
+            ...period,
+            data: period.data.map(station => ({
+              ...station,
+              data: station.data.map(meal => 
+                meal._id === mealIdToUpdate 
+                  ? { ...meal, favoritesCount: newCount } 
+                  : meal
+              ),
+            })),
+          }))
+        );
+      }
+    if (!user) {
+      setFavoriteMeals([]);
+      return;
+    }
     axios
-        .get(`${url}/api/users/${user.userId}/favorite-meal`)
-        .then(res => setFavoriteMeals(res.data.favoriteMeals))
-        .catch(err => console.error(err));
+      .get(`${url}/api/users/${user.userId}/favorite-meal`)
+      .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+      .catch(err => {
+        console.error('Error fetching favorite meals:', err);
+        setFavoriteMeals([]);
+      });
+  };
 
-    }, [user]);
+  useEffect(() => {
+    fetchFavoriteMeals();
+  }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const pan = useRef(new Animated.Value(0)).current;
@@ -205,6 +228,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                     isLiked={favoriteMeals.includes(item._id)}
                     location={'menu'}
                     favoritesCount={item.favoritesCount}
+                    onLikeChange={fetchFavoriteMeals}
                   />
                 )}
               />

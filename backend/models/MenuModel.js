@@ -41,6 +41,10 @@ const menuSchema = new Schema({
         type: Map,
         of: mealPeriodSchema,
         default: new Map()
+    },
+    date: {
+        type: Date,
+        required: true
     }
 });
 
