@@ -8,12 +8,14 @@ import { AuthContext } from '../context/AuthContext';
 
 const FoodTruck = ({
   truck,
+  onMenu = false,
   isOpen = false,
   closeTime = "N/A",
   nextOpenTime = "Unavailable",
-  location,
-  isFavorited=false
+  isLiked = false,
 }) => {
+  const [isFavorited, setFavorited] = useState(isLiked);
+  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const url = config.BASE_URL;
   const { user } = useContext(AuthContext);
@@ -59,15 +61,10 @@ const handleFav = async () => {
 };
 
   return (
-    <View style={location === 'menus' ? styles.menusContainer : styles.otherContainer}>
+    <View style={styles.cardContainer}>
       <View style={styles.nameTimeContainer}>
-        <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-          {truck.name}
-        </Text>
-        { location === 'menus'? 
-          <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
-          <View/>
-        }
+        <Text style={styles.name}>{truck.name}</Text>
+        {onMenu && <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>}
       </View>
       <Pressable onPress={handleFav} style={styles.heartContainer}>
         {location == 'popular' && (

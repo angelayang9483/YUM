@@ -9,7 +9,8 @@ import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
-  const [favorites, setFavorites] = useState([]);
+  const [favoriteMeals, setFavoriteMeals] = useState([]);
+  const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
   const url = config.BASE_URL;
   const router = useRouter();
   const { user } = useContext(AuthContext);
@@ -42,10 +43,36 @@ export default function Tab() {
     }
   };
 
+  const fetchFavoriteMeals = async () => {
+    try {
+      const response = await axios.get(`${url}/api/users/${user.userId}/favorite-meal`);
+      setFavoriteMeals(response.data.favoriteMeals);
+      console.log('favorite meals:', favoriteMeals);
+    } catch (err) {
+      console.error("Error fetching favorite meals:", err.message);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFavoriteFoodTrucks = async () => {
+    try {
+      const response = await axios.get(`${url}/api/users/${user.userId}/favorite-trucks`);
+      setFavoriteFoodTrucks(response.data.favoriteFoodTrucks);
+      console.log('favorite food trucks:', favoriteFoodTrucks);
+    } catch (err) {
+      console.error('Error fetching favorite food trucks:', err.message);
+      setError(err.message);
+    }
+  };
+
   useEffect(() => {
     fetchPopularMeals();
     fetchPopularFoodTrucks();
-  }, []);
+    fetchFavoriteMeals();
+    fetchFavoriteFoodTrucks();
+  }, [user]);
 
 
   return (
@@ -64,11 +91,13 @@ export default function Tab() {
           popularMeals.map(meal => (
             <Meal
               key={meal._id}
+              id={meal._id}
               name={meal.name}
               diningHall={meal.diningHall}
-              isLiked={true}
-              location={'popular'}
+              isLiked={favoriteMeals.includes(meal._id)}
+              location={'menu'}
               favoritesCount={meal.favoritesCount}
+              onLikeChange={fetchFavoriteMeals}
             />
           ))
           }
@@ -91,7 +120,8 @@ export default function Tab() {
             <FoodTruck
               key={foodTruck._id}
               truck={foodTruck}
-              location={'popular'}
+              isLiked={favoriteFoodTrucks.includes(foodTruck._id)}
+              location={'favorites'}
             />
           ))
           }
