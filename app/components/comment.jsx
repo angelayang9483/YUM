@@ -2,11 +2,20 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
 import config from '../config';
+import { useFonts } from 'expo-font';
 
 const Comment = ({ comment, onLike, liked }) => {
   const [isLiked, setLiked] = useState(liked || false);
   const [likes, setLikes] = useState(comment.likes || 0);
   const [diningHallName, setDiningHallName] = useState("");
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
 
   const url = config.BASE_URL;
 
@@ -69,7 +78,7 @@ const styles = StyleSheet.create ({
     padding: 15,
     margin: 5,
     borderRadius: 10,
-    backgroundColor: 'rgba(70, 127, 182, 1)',
+    backgroundColor: 'rgba(119, 140, 159, 1)',
     overflow: 'hidden',
   },
   textContainer: {
@@ -78,17 +87,15 @@ const styles = StyleSheet.create ({
     minWidth: 0,
   },
   title: {
+    color: 'rgba(30, 55, 101, 1)',
     fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-    marginBottom: 5,
-    flexWrap: 'wrap',
+    fontFamily: 'perpetua-bold'
   },
   body: {
-    fontSize: 14,
-    color: 'white',
-    flexWrap: 'wrap',
-    lineHeight: 18,
+      color: 'rgba(248, 249, 252, 1)',
+    paddingTop: 2,
+    fontSize: 15,
+    fontFamily: 'Gill-Sans'
   },
   heartContainer: {
     flexDirection: 'row',
@@ -97,7 +104,7 @@ const styles = StyleSheet.create ({
     minWidth: 50,
   },
   likeCount: {
-    color: 'white',
+      color: 'rgba(248, 249, 252, 1)',
     marginLeft: 5,
     fontSize: 14,
   }

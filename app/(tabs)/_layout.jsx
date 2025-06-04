@@ -19,20 +19,21 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ 
       tabBarStyle: {
-        backgroundColor: '#00509d',
-        borderTopWidth: 0, 
+        backgroundColor: 'rgba(30, 55, 101, 1)',
+        borderTopWidth: 10, 
+        borderColor: 'rgba(30, 55, 101, 1)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -1 },
         shadowOpacity: 0.2, 
         shadowRadius: 3,
       }, 
-      tabBarActiveTintColor: '#FFFFFF', 
-      tabBarInactiveTintColor: '#CCCCCC'  
+      tabBarActiveTintColor: 'rgba(208, 195, 171, 1)', 
+      tabBarInactiveTintColor: 'rgba(207, 207, 208, 1)'  
       }}>
       <Tabs.Screen
         name="menus"
         options={{
-          title: 'Menus',
+          title: 'menus',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUtensils} color={color} />,
           headerShown: false
         }}
@@ -40,7 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="favorites"
         options={{
-          title: 'Favorites',
+          title: 'favorites',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faHeart} color={color} />,
           headerShown: false
         }}
@@ -48,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="popular"
         options={{
-          title: 'Popular',
+          title: 'popular',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faComment} color={color} />,
           headerShown: false
         }}
@@ -56,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'profile',
           tabBarIcon: ({ color }) => <FontAwesomeIcon size={28} icon={faUser} color={color} />,
           headerShown: false
         }}

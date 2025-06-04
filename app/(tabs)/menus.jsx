@@ -7,6 +7,7 @@ import FoodTruck from '../components/foodTruck.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import { getClosingTime, getClosingTruckTime, getDiningHalls, getFoodTrucks, getNextOpenTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isDiningHallOpen, isFoodTruckOpen } from '../utils/helpers.js';
+import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -26,6 +27,16 @@ export default function Tab() {
   const [isScrapingCheckDone, setIsScrapingCheckDone] = useState(false);
   const [isInitialDataFetchAttemptDone, setIsInitialDataFetchAttemptDone] = useState(false);
   const [favoriteFoodTrucks, setFavoriteFoodTrucks] = useState([]);
+
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
+
 
   
   // New useEffect to manage the main loading state based on completion flags
@@ -191,7 +202,8 @@ useEffect(() => {
   
   const searchFunc = (text) => {
     setSearchValue(text);
-    const filtered = text.trim() === '' ? [] : 
+
+    const filteredDiningHalls = text.trim() === '' ? [] : 
       diningHalls.filter((hall) => 
         hall.name.toLowerCase().includes(text.toLowerCase().trim())
       );
@@ -210,6 +222,7 @@ useEffect(() => {
       return (
         <View>
           <Text style={styles.subheading}>Search Results</Text>
+          <Text style={styles.subheading}>DINING HALLS</Text>
           {filteredHalls.map((hall) => (
             <View key={hall._id}>
               <DiningHall
@@ -235,6 +248,20 @@ useEffect(() => {
               />
             </View>
           ))}
+          <Text style={styles.subheading}>FOOD TRUCKS</Text>
+          {filteredTrucks.map((truck) => (
+            <View key={truck._id}>
+              <FoodTruck
+                key={truck._id} 
+                truck={truck} 
+                isOpen={isFoodTruckOpen(truck)}
+                closeTime={isFoodTruckOpen(truck) ? getClosingTruckTime(truck) : null}
+                nextOpenTime={!isFoodTruckOpen(truck) ? getNextOpenTruckTime(truck) : null}
+                location={'menus'}
+              />
+            </View>
+          ))
+          }
         </View>
       );
     }
@@ -242,8 +269,8 @@ useEffect(() => {
     // Normal view with sections
     return (
       <View>
-        <Text style={styles.subheading}>Dining Halls</Text>
-        {section.title === 'Open Now' ? openDiningHalls.map((hall) => (
+        <Text style={styles.subheading}>DINING HALLS</Text>
+        {section.title === 'open now' ? openDiningHalls.map((hall) => (
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
@@ -264,8 +291,9 @@ useEffect(() => {
             />
           </View>
         ))}
-        <Text style={styles.subheading}>Food Trucks</Text>
-        {section.title === 'Open Now' ? openFoodTrucks.map(truck => (
+        <Text style={styles.subheading}>FOOD TRUCKS</Text>
+        {section.title === 'open now' ? openFoodTrucks.map((truck) => (
+          <View key={truck._id}>
             <FoodTruck 
               key={truck._id}
               truck={truck}
@@ -327,10 +355,9 @@ useEffect(() => {
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
-          <Text style={styles.padding}></Text>
-          <Text style={styles.title}>Menus</Text>
+          <Text style={styles.title}>menus</Text>
           <SearchBar
-            placeholder="Type here ..."
+            placeholder="search for a dining hall or truck..."
             onChangeText={searchFunc}
             value={searchValue}
             round
@@ -345,16 +372,16 @@ useEffect(() => {
           contentContainerStyle={styles.sectionListContent}
           sections={searchValue.trim() !== '' ? [
             {
-              title: 'Search Results',
+              title: 'search results',
               data: [{ id: 'search' }]
             }
           ] : [
             {
-              title: 'Open Now',
+              title: 'open now',
               data: [{ id: 'open' }]
             },
             {
-              title: 'Closed',
+              title: 'closed',
               data: [{ id: 'closed' }]
             }
           ]}
@@ -377,7 +404,7 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   sectionListContent: {
     paddingHorizontal: 15,
@@ -393,23 +420,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   title: {
-    fontWeight: '800',
-    fontSize: 30,
-    color: 'rgba(0, 80, 157, 1)',
-    paddingHorizontal: 15,
+    // fontWeight: '800',
+    fontSize: 40,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'perpetua-bold-italic'
   },
   heading: {
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 25,
-    color: 'rgba(0, 80, 157, 1)',
+    fontFamily: 'Gill-Sans'
   },
   subheading: {
     width: '100%',
-    fontWeight: '600',
-    fontSize: 20,
-    color: 'rgba(0, 80, 157, 1)',
+    fontSize: 25,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'Perpetua-MT-Regular',
     paddingLeft: 20,
-    marginBottom: 10,
+    marginTop: 5,
   },
   padding: {
     paddingTop: 15,
@@ -432,7 +459,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 80, 157, 0.5)'
   },
   searchBar: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
     borderBottomWidth: 0,
     borderTopWidth: 0,
     paddingHorizontal: 0,

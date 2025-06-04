@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import config from '../config';
+import { useFonts } from 'expo-font';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -13,6 +14,14 @@ export default function Tab() {
   
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
 
   const handleSubmit = async () => {
     if ( !username || !password ) {
@@ -85,12 +94,12 @@ export default function Tab() {
       />
 
       <Pressable onPress={handleSubmit} style={styles.button}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+        <Text style={styles.buttonText}>sign up</Text>
       </Pressable>
 
-      <Text style={styles.text}>Have an account?</Text>
+      <Text style={styles.text}>have an account?</Text>
       <Pressable onPress={() => router.navigate('/login')}>
-        <Text style={styles.signIn}>Sign In</Text>
+        <Text style={styles.signIn}>sign in</Text>
       </Pressable>
     </View>
   );
@@ -101,11 +110,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   heading: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     fontSize: 40,
-    color: 'rgba(0, 80, 157, 1)',
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'Gill-Sans-Bold'
   },
   input: {
     fontSize: 17,
@@ -118,14 +129,14 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   boldText: {
-    fontSize: 20,
+    fontSize: 25,
+    fontFamily: 'Perpetua-MT-Regular',
     margin: 20,
-    fontWeight: 'bold',
   },
   button: {
     width: '80%',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 80, 157, 1)',
+    backgroundColor: 'rgba(30, 55, 101, 1)',
     height: 40,
     borderRadius: 10,
     margin: 20,
@@ -133,11 +144,13 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 15,
+    fontSize: 20,
+    fontFamily: 'Perpetua-MT-Regular',
   },
   text: {
-    fontSize: 15,
+    fontSize: 20,
     paddingTop: 10,
+    fontFamily: 'Perpetua-MT-Regular',
   },
   signIn: {
     color: 'rgba(0, 80, 157, 1)',

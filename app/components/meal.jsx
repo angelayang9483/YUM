@@ -5,10 +5,19 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import { emit } from '../utils/emitter';
+import { useFonts } from 'expo-font';
 
 const Meal = (props) => {
     const url = config.BASE_URL;
     const { user } = useContext(AuthContext);
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
 
     const handleFavorite = async () => {  
         try {
@@ -66,7 +75,7 @@ export default Meal;
 
 const styles = StyleSheet.create({
     favoritesContainer: {
-        backgroundColor: '#467FB6',
+        backgroundColor: 'rgba(119, 140, 159, 1)',
         width: '100%',
         borderRadius: 10,
         marginVertical: 5,
@@ -78,7 +87,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center'
     },
     menusContainer: {
-        backgroundColor: '#467FB6',
+        backgroundColor: 'rgba(119, 140, 159, 1)',
         width: '100%',
         borderRadius: 10,
         marginTop: 5,
@@ -98,18 +107,21 @@ const styles = StyleSheet.create({
         width: '87%',
     },
     favoritesItem: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '700',
+        color: 'rgba(30, 55, 101, 1)',
+        fontSize: 17,
+        fontFamily: 'Gill-Sans-Bold'
     },
     menusItem: {
-        color: 'white',
+        color: 'rgba(30, 55, 101, 1)',
         fontSize: 15,
-        fontWeight: '500'
+        // fontWeight: '500',
+        fontFamily: 'Gill-Sans'
     },
     diningHall: {
-        color: 'white',
+      color: 'rgba(248, 249, 252, 1)',
         paddingTop: 2,
+        fontSize: 17,
+        fontFamily: 'perpetua-bold-italic'
     },
     heartContainer: {
         flexDirection: 'row',

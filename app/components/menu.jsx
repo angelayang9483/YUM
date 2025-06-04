@@ -20,6 +20,7 @@ import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import { initializeMealAndTruckListeners } from '../utils/helpers.js';
 import Meal from './meal.jsx';
+import { useFonts } from 'expo-font';
 
 const { height } = Dimensions.get('window');
 const SNAP_POINT = height * 0.1;
@@ -34,6 +35,14 @@ const Menu = ({ visible, onClose, diningHallId }) => {
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
+  const [fontsLoaded] = useFonts({
+    'perpetua-bold-italic': require('../../assets/Perpetua-Font-Family/perpetua-bold-italic.ttf'),
+    'perpetua-bold': require('../../assets/Perpetua-Font-Family/perpetua-bold.ttf'),
+    'Perpetua-MT-Regular': require('../../assets/Perpetua-Font-Family/Perpetua-MT-Regular.ttf'),
+    'Gil-Sans': require('../../assets/gill-sans-2/Gill-Sans.otf'),
+    'Gil-Sans-Light': require('../../assets/gill-sans-2/Gill-Sans-Light.otf'),
+    'Gil-Sans-Bold': require('../../assets/gill-sans-2/Gill-Sans-Bold.otf')
+  });
 
   const fetchFavoriteMeals = (meal, adding) => {
     if (meal) {
@@ -203,7 +212,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.header} {...panResponder.panHandlers}>
             <View style={styles.grabber} />
-            <Text style={styles.title}>Menu</Text>
+            <Text style={styles.title}>menu</Text>
           </View>
 
           <View style={styles.mainContent}>
@@ -265,7 +274,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                       sections={selectedPeriod.data}
                       keyExtractor={(item, idx) => item._id + idx}
                       renderSectionHeader={({ section }) => (
-                        <Text style={styles.sectionHeader}>{section.title}</Text>
+                        <Text style={styles.sectionHeader}>{section.title.toLowerCase()}</Text>
                       )}
                       renderItem={({ item, idx }) => (
                         <Meal
@@ -310,7 +319,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(248, 249, 252, 1)',
   },
   safeArea: {
     flex: 1,
@@ -324,7 +333,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '90%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(207, 207, 208, 1)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 12,
@@ -343,9 +352,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 30,
-    fontWeight: '600',
-    color: '#222',
+    fontSize: 40,
+    color: 'rgba(30, 55, 101, 1)',
+    fontFamily: 'perpetua-bold-italic'
   },
   center: {
     flex: 1,
@@ -375,7 +384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentButtonSelected: {
-    backgroundColor: '#467FB6',
+      backgroundColor: 'rgba(110, 105, 93, 1)',
   },
   segmentButtonUnselected: {
     backgroundColor: '#ffffff',
@@ -391,12 +400,13 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   sectionHeader: {
-    fontWeight: '600',
-    fontSize: 18,
-    color: '#222',
+    fontSize: 20,
+    fontFamily: 'Perpetua-MT-Regular',
     backgroundColor: '#f6f6f6',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    padding: 8,
+    margin: 1,
+    marginAbove: 2,
+    width: '200%',
   },
   listContainer: {
     flex: 1,
@@ -411,7 +421,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     padding: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#f6f6f6',
     borderTopWidth: 1,
     borderTopColor: '#eee',
     alignItems: 'center',
