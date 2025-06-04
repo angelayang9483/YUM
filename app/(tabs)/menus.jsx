@@ -28,6 +28,7 @@ export default function Tab() {
 
   const [searchValue, setSearchValue] = useState('');
   const [filteredHalls, setFilteredHalls] = useState([]);
+  const [filteredTrucks, setFilteredTrucks] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -320,11 +321,19 @@ export default function Tab() {
   
   const searchFunc = (text) => {
     setSearchValue(text);
-    const filtered = text.trim() === '' ? [] : 
+
+    const filteredDiningHalls = text.trim() === '' ? [] : 
       diningHalls.filter((hall) => 
         hall.name.toLowerCase().includes(text.toLowerCase().trim())
-      );
-    setFilteredHalls(filtered);
+    );
+    const filteredFoodTrucks = text.trim() === '' ? [] : 
+      foodTrucks.filter((truck) => 
+        truck.name.toLowerCase().includes(text.toLowerCase().trim())
+    );
+
+    setFilteredHalls(filteredDiningHalls);
+    setFilteredTrucks(filteredFoodTrucks);
+    console.log('FILTERED TRUCKS: ', filteredTrucks);
   };
 
   // Add logging to render function
@@ -334,6 +343,7 @@ export default function Tab() {
       return (
         <View>
           <Text style={styles.subheading}>Search Results</Text>
+          <Text style={styles.subheading}>DINING HALLS</Text>
           {filteredHalls.map((hall) => (
             <View key={hall._id}>
               <DiningHall
@@ -346,6 +356,20 @@ export default function Tab() {
               />
             </View>
           ))}
+          <Text style={styles.subheading}>FOOD TRUCKS</Text>
+          {filteredTrucks.map((truck) => (
+            <View key={truck._id}>
+              <FoodTruck
+                key={truck._id} 
+                truck={truck} 
+                isOpen={isFoodTruckOpen(truck)}
+                closeTime={isFoodTruckOpen(truck) ? getClosingTruckTime(truck) : null}
+                nextOpenTime={!isFoodTruckOpen(truck) ? getNextOpenTruckTime(truck) : null}
+                location={'menus'}
+              />
+            </View>
+          ))
+          }
         </View>
       );
     }
@@ -417,7 +441,7 @@ export default function Tab() {
         <View style={styles.section}>
           <Text style={styles.title}>menus</Text>
           <SearchBar
-            placeholder="Search for a dining hall ..."
+            placeholder="search for a dining hall or truck..."
             onChangeText={searchFunc}
             value={searchValue}
             round
