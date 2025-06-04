@@ -1,11 +1,13 @@
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useContext, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import Line from '../components/line.jsx';
-import Meal from '../components/meal.jsx';
+import Comment from '../components/comment.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
+import Line from '../components/line.jsx';
+import Meal from '../components/meal.jsx';
 
 export default function Tab() {
   const url = config.BASE_URL;
@@ -42,9 +44,8 @@ export default function Tab() {
       if (!user || !user.userId) throw new Error('User not properly authenticated');
 
       const response = await axios.get(`${url}/api/users/${user.userId}`);
-      setFavorites(response.data.favoriteMeals || []);
+      setFavorites(response.data.favorites || []);
       setFavoriteFoodTrucks(response.data.favoriteFoodTrucks || []);
-      console.log("Fetched Favorites:", response.data.favorites);
 
     } catch (error) {
       console.error(error);
@@ -74,9 +75,7 @@ export default function Tab() {
   }, [favorites]);
 
   const hereTodayMeals = favoriteMeals.filter(meal => meal.hereToday);
-  console.log(hereTodayMeals);
   const notHereTodayMeals = favoriteMeals.filter(meal => !meal.hereToday);
-  console.log(notHereTodayMeals);
 
   return (
     <ScrollView style={styles.container}>
@@ -88,11 +87,11 @@ export default function Tab() {
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Here Today</Text>
+        <Text style={styles.heading}>Available Now</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Meals</Text>
           {
-          hereTodayMeals.map(meal => (
+          favoriteMeals.map(meal => (
             <Meal
               key={meal._id}
               name={meal.name}
@@ -101,7 +100,7 @@ export default function Tab() {
               location={'favorites'}
             />
           ))
-        }
+          }
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>
@@ -111,20 +110,9 @@ export default function Tab() {
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Not Here Today</Text>
+        <Text style={styles.heading}>Later Today</Text>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Meals</Text>
-          {
-            notHereTodayMeals.map(meal => (
-              <Meal
-                key={meal._id}
-                name={meal.name}
-                diningHall={meal.diningHall}
-                isLiked={true}
-                location={'favorites'}
-              />
-            ))
-          }
         </View>
         <View style={styles.subsection}>
           <Text style={styles.subheading}>Food Trucks</Text>

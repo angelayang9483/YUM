@@ -9,7 +9,7 @@ const stationSchema = new Schema({
     },
     meals: [{
         type: Schema.Types.ObjectId,
-        ref: "meal",
+        ref: "Meal",
         required: true
     }]
 });

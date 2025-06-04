@@ -35,4 +35,7 @@ router.delete('/:id/favorite-meal', userController.unfavoriteMeal);
 // get favorite meals
 router.get('/:id/favorite-meal', userController.getFavoriteMeals)
 
+// GET favorite trucks
+router.get('/:userId/favorite-trucks', userController.getFavoriteFoodTrucks);
+
 module.exports = router;
