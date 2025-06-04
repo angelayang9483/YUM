@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import FoodTruck from '../../backend/models/FoodTruckModel.js';
 import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
@@ -15,6 +16,7 @@ export default function Tab() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [popularMeals, setPopularMeals] = useState([]);
+  const [popularFoodTrucks, setPopularFoodTrucks] = useState([]);
 
   const fetchPopularMeals = async () => {
     try {
@@ -29,8 +31,30 @@ export default function Tab() {
     }
   };
 
+  const fetchPopularFoodTrucks = async () => {
+    try {
+      const response = await axios.get(`${url}/api/foodtrucks/popular`);
+      setPopularFoodTrucks(response.data);
+      console.log('popular food trucks:', response.data);
+    } catch (err) {
+      console.error('Error fetching popular food trucks:', err.message);
+      setError(err.message);
+    }
+  };
+
   useEffect(() => {
-    fetchPopularMeals();
+    const loadPopularData = async () => {
+      try {
+        await fetchPopularMeals();
+        await fetchPopularFoodTrucks();
+      } catch (err) {
+        console.error(err);
+        setError(err.message || err.toString());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadPopularData();
   }, []);
 
 
@@ -65,6 +89,16 @@ export default function Tab() {
       <View style={styles.section}>
         <Text style={styles.heading}>Food Trucks</Text>
         <View style={styles.subsection}>
+          {
+          popularFoodTrucks.map(foodTruck => (
+            <FoodTruck
+              key={foodTruck._id}
+              name={foodTruck.name}
+              isLiked={true}
+              location={'favorites'}
+            />
+          ))
+          }
         </View>
       </View>
     </ScrollView>
