@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import FoodTruck from '../../backend/models/FoodTruckModel.js';
+import FoodTruck from '../components/foodTruck.jsx';
 import Line from '../components/line.jsx';
 import Meal from '../components/meal.jsx';
 import config from '../config';
@@ -43,18 +43,8 @@ export default function Tab() {
   };
 
   useEffect(() => {
-    const loadPopularData = async () => {
-      try {
-        await fetchPopularMeals();
-        await fetchPopularFoodTrucks();
-      } catch (err) {
-        console.error(err);
-        setError(err.message || err.toString());
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadPopularData();
+    fetchPopularMeals();
+    fetchPopularFoodTrucks();
   }, []);
 
 
@@ -91,11 +81,15 @@ export default function Tab() {
         <View style={styles.subsection}>
           {
           popularFoodTrucks.map(foodTruck => (
+            // <FoodTruck
+            //   key={foodTruck._id}
+            //   name={foodTruck.name}
+            //   isLiked={true}
+            //   location={'favorites'}
+            // />
             <FoodTruck
               key={foodTruck._id}
-              name={foodTruck.name}
-              isLiked={true}
-              location={'favorites'}
+              truck={foodTruck}
             />
           ))
           }
