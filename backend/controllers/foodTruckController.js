@@ -91,9 +91,21 @@ const favoriteFoodTruck = async (req, res) => {
   }
 };
 
+const getPopularFoodTrucks = async(req, res) => {
+  try {
+    const foodTrucks = await FoodTruck.find({favoritesCount: { $gt:20 }});
+    return res.status(200).json(foodTrucks);
+  }
+  catch (err) {
+    console.error('Error fetching popular meals:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = { 
   getFoodTrucks,
   getFoodTrucksHereToday,
   getFoodTruckById,
-  favoriteFoodTruck
+  favoriteFoodTruck,
+  getPopularFoodTrucks
 };

@@ -17,4 +17,7 @@ router.get('/category', mealController.getMealsByCategory);
 // POST new meal
 router.post('/', mealController.createMeal);
 
+// GET popular meals
+router.get('/', mealController.getPopularMeals);
+
 module.exports = router;

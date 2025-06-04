@@ -72,7 +72,17 @@ const createMeal = async (req, res) => {
       console.error('Error creating meal:', err);
       res.status(500).json({ message: 'Server error' });
     }
-  };
+};
 
+const getPopularMeals = async(req, res) => {
+  try {
+    const popularMeals = await Meal.find({favoritesCount: { $gt:20 }});
+    return res.status(200).json(popularMeals);
+  }
+  catch (err) {
+    console.error('Error fetching popular meals:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
 
-module.exports = { getMeals, getMealById, getMealsByName, getMealsByCategory, createMeal };
+module.exports = { getMeals, getMealById, getMealsByName, getMealsByCategory, createMeal, getPopularMeals};

@@ -3,7 +3,12 @@ const MenuModel = require('../models/MenuModel');
 // GET all menus
 const getMenus = async (req, res) => {
     try {
-        const menus = await MenuModel.find();
+        const menus = await MenuModel.find()
+        .populate({
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
+        })
+        .exec();
         res.status(200).json(menus);
     } catch (err) {
         console.error('Error fetching menus:', err);
@@ -32,7 +37,12 @@ const getMenusToday = async (req, res) => {
               $gte: startOfToday,
               $lt:  startOfTomorrow,
             }
-        });
+        })
+        .populate({
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
+        })
+        .exec();
         res.status(200).json(menus);
     } catch (err) {
         console.error('Error fetching menus:', err);
@@ -40,19 +50,25 @@ const getMenusToday = async (req, res) => {
     }
 };
 
-// GET all menus by dining hall
-const getMenusByDiningHall = async (req, res) => {
+// GET menu by dining hall
+const getMenuByDiningHall = async (req, res) => {
     try {
-        const menus = await MenuModel.find({ diningHallId: req.params.diningHallId });
-        res.status(200).json(menus);
+        const menu = await MenuModel.findOne({ diningHallId: req.params.diningHallId })
+        .populate({
+            path: 'mealPeriods.$*.stations.meals',
+            model: 'meal'
+        })
+        .exec();
+        res.status(200).json(menu);
     } catch (err) {
         console.error('Error fetching menus:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// GET all menus by dining hall and today
-const getMenusByDiningHallToday = async (req, res) => {
+// GET menu by dining hall
+/*
+const getMenuByDiningHallToday = async (req, res) => {
     try {
         const now = new Date();
         const startOfToday = new Date(
@@ -67,19 +83,26 @@ const getMenusByDiningHallToday = async (req, res) => {
             now.getDate() + 1,
             0, 0, 0, 0
         );
-        const menus = await MenuModel.find({
+        console.log(startOfToday)
+        console.log(startOfTomorrow)
+        const menu = await MenuModel.findOne({
             date: {
               $gte: startOfToday,
               $lt:  startOfTomorrow,
             },
             diningHallId: req.params.diningHallId
-        });
-        res.status(200).json(menus);
+        })
+        .populate({
+            path: 'mealPeriods.stations.meals',
+            model: 'meal'
+        })
+        .exec();
+        res.status(200).json(menu);
     } catch (err) {
         console.error('Error fetching menus:', err);
         res.status(500).json({ message: 'Server error' });
     }
-};
+};*/
     
 // POST new menu
 const createMenu = async (req, res) => {
@@ -93,4 +116,4 @@ const createMenu = async (req, res) => {
   };
 
 
-module.exports = { getMenus, getMenusToday, getMenusByDiningHall, getMenusByDiningHallToday, createMenu };
+module.exports = { getMenus, getMenusToday, getMenuByDiningHall, /*getMenuByDiningHallToday,*/ createMenu };

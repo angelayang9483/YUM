@@ -1,151 +1,295 @@
 // Menu.jsx
-import React, { useEffect, useRef } from 'react';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    Modal,
+    PanResponder,
+    SectionList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import config from '../config';
+import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
+const SNAP_POINT = height / 8;
 
-const Menu = ({ visible, onClose, todayMeals }) => {
-  const slideAnim = useRef(new Animated.Value(height)).current;
+const Menu = ({ visible, onClose, diningHallId }) => {
+  const url = config.BASE_URL;
+  const [menu, setMenu] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const translateY = useRef(new Animated.Value(height)).current;
+  const pan = useRef(new Animated.Value(0)).current;
+  const animTranslateY = Animated.add(translateY, pan);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, { dy }) => Math.abs(dy) > 5,
+      onPanResponderMove: (_, { dy }) => {
+        if (dy > 0) {
+          pan.setValue(dy);
+        }
+      },
+      onPanResponderRelease: (_, { dy, vy }) => {
+        if (dy > 100 || vy > 1.0) {
+          Animated.timing(translateY, {
+            toValue: height,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            pan.setValue(0);
+            onClose();
+          });
+        } else {
+          Animated.spring(pan, {
+            toValue: 0,
+            bounciness: 8,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        console.log('Fetching menu for diningHallId:', diningHallId);
+        const response = await axios.get(`${url}/api/menus/${diningHallId}`);
+        const periodList = Object.values(response.data.mealPeriods);
+        const newMenu = periodList.map((period) => ({
+          title: period.name,
+          data: period.stations.map((station) => ({
+            title: station.name,
+            data: station.meals,
+          })),
+        }));
+        setMenu(newMenu);
+
+        if (newMenu.length > 0) {
+          setSelectedPeriod(newMenu[0]);
+        } else {
+          setError('No menu found');
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching menu:', err);
+        setError('Failed to fetch menu');
+        setLoading(false);
+      }
+    };
+
+    fetchMenu();
+  }, [diningHallId]);
 
   useEffect(() => {
     if (visible) {
-      Animated.timing(slideAnim, {
-        toValue: height / 2,
+      translateY.setValue(height);
+      Animated.timing(translateY, {
+        toValue: SNAP_POINT,
         duration: 300,
         useNativeDriver: true,
       }).start();
     } else {
-      Animated.timing(slideAnim, {
+      Animated.timing(translateY, {
         toValue: height,
         duration: 300,
         useNativeDriver: true,
-      }).start();
+      }).start(() => {
+        pan.setValue(0);
+      });
     }
   }, [visible]);
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        { transform: [{ translateY: slideAnim }] },
-      ]}
-    >
-      {(!meals || meals.length === 0) && (
-        <Text style={styles.text}>No meals available for today.</Text>
-      )}
-      {meals && meals.length > 0 && (
-        <ScrollView style={styles.mealsList}>
-          {meals.map((mealItem, index) => (
-            <View key={index} style={styles.mealContainer}>
-              <View style={styles.infoContainer}>
-                <Text style={styles.mealName}>{mealItem.name}</Text>
-                <Text style={styles.mealDesc}>{mealItem.description}</Text>
-              </View>
-              <Text style={styles.mealPrice}>
-                ${mealItem.price.toFixed(2)}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      )}
+    <Modal visible={visible} animationType="none" transparent>
+        <View style={styles.backdrop} />
+      <Animated.View
+        style={[
+          styles.container,
+          { transform: [{ translateY: animTranslateY }] },
+        ]}
+      >
+        <View style={styles.header} {...panResponder.panHandlers}>
+          <View style={styles.grabber} />
+          <Text style={styles.title}>Menu</Text>
+        </View>
 
-      <Pressable onPress={onClose} style={styles.closeButton}>
-        <Text style={styles.closeText}>Close</Text>
-      </Pressable>
-    </Animated.View>
+        {loading && (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" />
+          </View>
+        )}
+        {!loading && error && (
+          <View style={styles.center}>
+            <Text>{error}</Text>
+          </View>
+        )}
+
+        {!loading && !error && (
+          <View style={styles.content}>
+            <View style={styles.buttonsRow}>
+              {menu.map((p, idx) => (
+                <View key={p.title + idx} style={styles.buttonWrapper}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedPeriod(p)}
+                    style={[
+                      styles.segmentButton,
+                      p.title === selectedPeriod.title
+                        ? styles.segmentButtonSelected
+                        : styles.segmentButtonUnselected,
+                      idx > 0 && {
+                        borderLeftWidth: 1,
+                        borderLeftColor: '#d1d1d6',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        p.title === selectedPeriod.title
+                          ? styles.segmentTextSelected
+                          : styles.segmentTextUnselected,
+                      ]}
+                    >
+                      {p.title.charAt(0).toUpperCase() + p.title.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            {!selectedPeriod && (
+              <View style={styles.center}>
+                <Text>Please select a meal period</Text>
+              </View>
+            )}
+
+            {selectedPeriod && (
+              <SectionList
+              showsVerticalScrollIndicator={false}
+                sections={selectedPeriod.data}
+                keyExtractor={(item, idx) => item._id + idx}
+                renderSectionHeader={({ section }) => (
+                  <Text style={styles.sectionHeader}>{section.title}</Text>
+                )}
+                renderItem={({ item, idx }) => (
+                  <Meal
+                    key={item._id + idx}
+                    name={item.name}
+                    diningHall={item.diningHall}
+                    isLiked={true}
+                    location={'menu'}
+                  />
+                )}
+              />
+            )}
+          </View>
+        )}
+      </Animated.View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+    backdrop: {
+        position:  'absolute',
+        top:       0,
+        left:      0,
+        right:     0,
+        bottom:    0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+
+    },
+
   container: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    height: height / 2,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    padding: 20,
-    elevation: 5,
-    zIndex: 10,
+    height: height,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+    paddingHorizontal: 16,
+    zIndex: 1000,
   },
-  text: {
-    fontSize: 18,
-    color: 'black',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  mealsList: {
-    flex: 1,
+  header: {
+    alignItems: 'center',
     marginBottom: 12,
   },
-  mealContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
+  grabber: {
+    width: 40,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#ccc',
+    marginBottom: 8,
   },
-  infoContainer: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  mealName: {
-    fontSize: 18,
+  title: {
+    fontSize: 30,
     fontWeight: '600',
-    color: '#333',
+    color: '#222',
   },
-  mealDesc: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#467FB6',
-    paddingVertical: 10,
-    borderRadius: 5,
+  center: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  closeText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+  content: {
+    flex: 1,
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#d1d1d6',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+    height: 36,
+  },
+  buttonWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  segmentButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  segmentButtonSelected: {
+    backgroundColor: '#467FB6',
+  },
+  segmentButtonUnselected: {
+    backgroundColor: '#ffffff',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  segmentTextSelected: {
+    color: '#ffffff',
+  },
+  segmentTextUnselected: {
+    color: '#000000',
+  },
+  sectionHeader: {
+    fontWeight: '600',
+    fontSize: 18,
+    color: '#222',
+    backgroundColor: '#f6f6f6',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
 });
-
-const todayMeals = [
-  {
-    name:        'Grilled Chicken Salad',
-    description: 'Fresh greens topped with grilled chicken, cherry tomatoes, and a balsamic vinaigrette.',
-    price:       12.99,
-  },
-  {
-    name:        'Veggie Burger',
-    description: 'Black bean patty with lettuce, tomato, avocado, and our special sauce.',
-    price:       10.50,
-  },
-  {
-    name:        'Spaghetti Carbonara',
-    description: 'Penne pasta in a creamy sauce with pancetta, parmesan, and cracked pepper.',
-    price:       14.75,
-  },
-  {
-    name:        'Smoothie Bowl',
-    description: 'Acai base topped with granola, banana, berries, and a honey drizzle.',
-    price:       8.00,
-  },
-];
 
 export default Menu;

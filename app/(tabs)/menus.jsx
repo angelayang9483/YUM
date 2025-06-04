@@ -256,6 +256,7 @@ export default function Tab() {
             <View key={hall._id}>
               <DiningHall
                 style={styles.diningHall}
+                id={hall._id}
                 name={hall.name}
                 isOpen={isDiningHallOpen(hall)}
                 closeTime={isDiningHallOpen(hall) ? getClosingTime(hall) : null}
@@ -275,6 +276,7 @@ export default function Tab() {
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
+              id={hall._id}
               name={hall.name}
               isOpen={true}
               closeTime={getClosingTime(hall)}
@@ -284,6 +286,7 @@ export default function Tab() {
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
+              id={hall._id}
               name={hall.name}
               isOpen={false}
               nextOpenTime={getNextOpenTime(hall)}
