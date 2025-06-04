@@ -9,6 +9,7 @@ const Meal = (props) => {
     const url = config.BASE_URL;
     const { user } = useContext(AuthContext);
     const [isLiked, setLiked] = useState(props.isLiked);
+    const [favoritesCount, setFavoritesCount] = useState(props.favoritesCount);
 
     const handleLike = async () => {  
         try {
@@ -16,10 +17,12 @@ const Meal = (props) => {
                 await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
                     data: { mealId: props.id } 
                 });
+                setFavoritesCount(favoritesCount - 1);
             } else {
                 await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
                     { mealId: props.id }
                 );
+                setFavoritesCount(favoritesCount + 1);
             }
             setLiked(!isLiked);
         } catch (error) {
@@ -44,7 +47,7 @@ const Meal = (props) => {
                     color="white" 
                 />
             </Pressable>
-
+            <Text style={styles.favoritesCount}>{favoritesCount}</Text>
         </View>
     );
 };
@@ -102,5 +105,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexShrink: 0,
         minWidth: 30,
+    },
+    favoritesCount: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '500',
     }
 });
