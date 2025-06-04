@@ -1,23 +1,28 @@
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { SafeAreaView, SectionList, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { SearchBar } from 'react-native-elements';
 import DiningHall from '../components/diningHall.jsx';
 import Comment from '../components/comment.jsx';
 import Line from '../components/line.jsx';
 import config from '../config';
+import { AuthContext } from '../context/AuthContext';
+import FoodTruck from '../components/foodTruck.jsx';
 
 export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
+  const { user } = useContext(AuthContext);
+
   const [diningHalls, setDiningHalls] = useState([]);
+  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
+  const [foodTrucks, setFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
   const [time, setTime] = useState('');
   const [mealPeriod, setMealPeriod] = useState('none');
   const [searchValue, setSearchValue] = useState('');
-  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
   const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
   const [filteredHalls, setFilteredHalls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +115,38 @@ export default function Tab() {
   
     return false;
   }  
+
+  function getNextOpenTime( hall ) {
+    let nextIndex = getNextMealPeriodIndex( hall );
+    let nextTime = hall.hours[ nextIndex ]
+    // console.log(`NEXT TIME FOR ${hall.name}: `, nextTime.open);
+    return (
+      nextTime?.open || 'N/A'
+    )
+  }
+
+  function getClosingTime ( hall ) {
+    // check for extended dinner
+    if ( mealPeriod === "Dinner" && hall.hours[3].open ) {
+      return hall.hours[3].close;
+    }
+    else {
+      return (
+        hall.hours[
+          mealPeriod === 'none'
+            ? null
+            : (mealPeriodDict[mealPeriod]) % mealPeriods.length
+        ]?.close || 'N/A'
+      )
+    }
+  }
+
+  // get the dining halls and food trucks
+  const getFoodTrucks = async () => {
+    const response = await axios.get(`${url}/api/foodtrucks/here`);
+    console.log("Food truck data response: ", response.data);
+    setFoodTrucks(response.data);
+  }
   
   // display loading screen if it is still scraping info
   useEffect(() => {
@@ -146,6 +183,7 @@ export default function Tab() {
   useEffect(() => {
     console.log('Getting dining halls');
     getDiningHalls();
+    getFoodTrucks();
   }, []);
 
   // supposed to run every 30 minutes
@@ -270,9 +308,14 @@ export default function Tab() {
           </View>
         ))}
         <Text style={styles.subheading}>Food Trucks</Text>
-        <View style={styles.placeholderContainer}>
-          <Text style={styles.placeholderText}>Coming soon!</Text>
-        </View>
+        {
+          foodTrucks.map(truck => (
+            <FoodTruck 
+              key={truck._id} 
+              truck={truck} 
+            />
+          ))
+        }
       </View>
     );
   };
@@ -287,6 +330,32 @@ export default function Tab() {
   }
 
   return (
+        // <Text style={styles.heading}>Open Now</Text>
+        // <View style={styles.subsection}>
+        //   <Text style={styles.subheading}>Dining Halls</Text>
+        //   {
+        //     openDiningHalls.map(hall => (
+        //       <DiningHall
+        //         key={hall._id}
+        //         name={hall.name}
+        //         isOpen={true}
+        //         closeTime={ getClosingTime(hall) }
+        //         nextOpenTime={null}
+        //       />
+        //     ))
+        //   }
+        // </View>
+        // <View style={styles.subsection}>
+        //   <Text style={styles.subheading}>Food Trucks</Text>
+          // {
+          //   foodTrucks.map(truck => (
+          //     <FoodTruck 
+          //       key={truck._id} 
+          //       truck={truck} 
+          //     />
+          //   ))
+          // }
+        // </View>
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>

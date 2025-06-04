@@ -34,7 +34,7 @@ const foodTruckSchema = new Schema({
         type: Boolean,
         default: false
     },
-    likeCount: {
+    favoriteCount: {
         type: Number,
         default: 0
     }

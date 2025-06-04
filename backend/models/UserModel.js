@@ -13,14 +13,14 @@ const userSchema = new Schema({
         type: String,
         default: ""
     },
-    favorites: {
-        type: [String],
-        default: []
-    }, 
-    favoriteFoodTrucks: {
-        type: [String],
-        default: []
-    },
+    favoriteMeals: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Meal'
+    }],
+    favoriteFoodTrucks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FoodTruck'
+    }],
     karma: {
         type: Number,
         default: 0
