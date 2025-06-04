@@ -27,10 +27,6 @@ const menuSchema = new Schema({
         type: String,
         required: true
     },
-    date: {
-        type: Date,
-        required: true
-    },
     diningHallId: {
         type: Schema.Types.ObjectId,
         ref: "DiningHall",
