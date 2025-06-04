@@ -54,11 +54,9 @@ export default function Tab() {
   }
 
   const getDiningHalls = async () => {
-    console.log("Base URL:", url);
     try {
-      console.log("Attempting to scrape the info");
-      const response1 = await axios.post(`${url}/api/scrapeMenus`);
       const response = await axios.get(`${url}/api/dininghalls`);
+      console.log('Dining halls data received:', response.data?.length || 0, 'halls');
       
       if (!response.data || !Array.isArray(response.data)) {
         console.error('Invalid dining halls data format:', response.data);
@@ -67,7 +65,7 @@ export default function Tab() {
       
       setDiningHalls(response.data);
     } catch (error) {
-      console.error('Network error:', error.message);
+      console.error('Error fetching dining halls:', error.message);
       if (error.response) {
         console.error('Error response:', error.response.data);
         console.error('Error status:', error.response.status);
@@ -234,14 +232,15 @@ export default function Tab() {
         <View>
           <Text style={styles.subheading}>Search Results</Text>
           {filteredHalls.map((hall) => (
-            <DiningHall
-              key={hall._id}
-              style={styles.diningHall}
-              name={hall.name}
-              isOpen={isDiningHallOpen(hall, mealPeriod, now)}
-              closeTime={isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[mealPeriodDict[mealPeriod]]?.close : null}
-              nextOpenTime={!isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[getNextMealPeriodIndex(now, hall)]?.open : null}
-            />
+            <View key={hall._id}>
+              <DiningHall
+                style={styles.diningHall}
+                name={hall.name}
+                isOpen={isDiningHallOpen(hall, mealPeriod, now)}
+                closeTime={isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[mealPeriodDict[mealPeriod]]?.close : null}
+                nextOpenTime={!isDiningHallOpen(hall, mealPeriod, now) ? hall.hours[getNextMealPeriodIndex(now, hall)]?.open : null}
+              />
+            </View>
           ))}
         </View>
       );
@@ -252,21 +251,23 @@ export default function Tab() {
       <View>
         <Text style={styles.subheading}>Dining Halls</Text>
         {section.title === 'Open Now' ? openDiningHalls.map((hall) => (
-          <DiningHall
-            key={hall._id}
-            style={styles.diningHall}
-            name={hall.name}
-            isOpen={true}
-            closeTime={hall.hours[mealPeriodDict[mealPeriod]]?.close}
-          />
+          <View key={hall._id}>
+            <DiningHall
+              style={styles.diningHall}
+              name={hall.name}
+              isOpen={true}
+              closeTime={hall.hours[mealPeriodDict[mealPeriod]]?.close}
+            />
+          </View>
         )) : closedDiningHalls.map((hall) => (
-          <DiningHall
-            key={hall._id}
-            style={styles.diningHall}
-            name={hall.name}
-            isOpen={false}
-            nextOpenTime={hall.hours[getNextMealPeriodIndex(now, hall)]?.open}
-          />
+          <View key={hall._id}>
+            <DiningHall
+              style={styles.diningHall}
+              name={hall.name}
+              isOpen={false}
+              nextOpenTime={hall.hours[getNextMealPeriodIndex(now, hall)]?.open}
+            />
+          </View>
         ))}
         <Text style={styles.subheading}>Food Trucks</Text>
         <View style={styles.placeholderContainer}>
