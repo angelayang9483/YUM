@@ -55,12 +55,9 @@ const Menu = ({ visible, onClose, diningHallId }) => {
       return;
     }
     axios
-      .get(`${url}/api/users/${user.userId}/favorite-meal`)
-      .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
-      .catch(err => {
-        console.error('Error fetching favorite meals:', err);
-        setFavoriteMeals([]);
-      });
+        .get(`${url}/api/users/${user.userId}/favorite-meal`)
+        .then(res => setFavoriteMeals(res.data.favoriteMeals))
+        .catch(err => console.error(err));
   };
 
   useEffect(() => {
