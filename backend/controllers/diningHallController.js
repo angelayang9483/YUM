@@ -6,7 +6,7 @@ const getDiningHalls = async (req, res) => {
     const timestamp = new Date().toISOString();
     const diningHalls = await DiningHall.find();
     
-    console.log(`\n🔍 [${timestamp}] getDiningHalls called - Found ${diningHalls.length} dining halls:`);
+    console.log(`\n [${timestamp}] getDiningHalls called - Found ${diningHalls.length} dining halls:`);
     diningHalls.forEach(hall => {
       console.log(`  - ${hall.name} (ID: ${hall._id}) - ${hall.hours.length} hour periods`);
       if (hall.hours.length > 0) {
