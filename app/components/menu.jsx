@@ -19,8 +19,8 @@ import {
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
-import Comment from './comment.jsx';
 import { initializeMealAndTruckListeners } from '../utils/helpers.js';
+import Comment from './comment.jsx';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
@@ -237,6 +237,20 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     }
   }
 
+  const handleCommentLike = async (commentId) => {
+    try {
+      await axios.post(`${url}/api/comments/${commentId}/like`, {
+        userId: user.userId
+      });
+      
+      // Just refresh the dining hall data to show updated likes count
+      const diningResponse = await axios.get(`${url}/api/diningHalls/${diningHallId}`);
+      setDiningHall(diningResponse.data);
+    } catch (err) {
+      console.error('Error liking comment:', err);
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="none" transparent>
       <View style={styles.backdrop} />
@@ -324,6 +338,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           isFavorited={favoriteMeals.some(a => a._id === item._id)}
                           location={'menu'}
                           favoritesCount={item.favoritesCount}
+                          onLikeChange={fetchFavoriteMeals}
                         />
                       )}
                       contentContainerStyle={styles.sectionListContent}
@@ -337,7 +352,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                               id={item._id}
                               name={item.name}
                               diningHall={item.diningHall}
-                              isLiked={favoriteMeals.includes(item._id)}
+                              isFavorited={favoriteMeals.some(a => a._id === item._id)}
                               location={'menu'}
                               favoritesCount={item.favoritesCount}
                               onLikeChange={fetchFavoriteMeals}
@@ -353,6 +368,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           <Comment
                             key={comment._id || index}
                             comment={comment}
+                            onLike={handleCommentLike}
                           />
                         ))}
                         {(!diningHall?.comments || diningHall.comments.length === 0) && (
