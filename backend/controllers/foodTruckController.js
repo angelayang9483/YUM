@@ -1,25 +1,31 @@
 const FoodTruck = require('../models/FoodTruckModel');
 
+// shared function
+const fetchAllFoodTrucks = async () => {
+  return await FoodTruck.find();
+};
+
 // GET all food trucks
 const getFoodTrucks = async (req, res) => {
   try {
-    const timestamp = new Date().toISOString();
-    const foodTrucks = await FoodTruck.find();
-    
-    console.log(`\n [${timestamp}] getFoodTrucks called - Found ${foodTrucks.length} food trucks:`);
-    foodTrucks.forEach(truck => {
-      console.log(`  - ${truck.name} (ID: ${truck._id}) - ${truck.hours.length} hour periods`);
-      if (truck.hours.length > 0) {
-        // Show the first hour period as a sample
-        const firstHour = truck.hours[0];
-        console.log(`Sample hour: ${firstHour.label} - time:"${firstHour.time}" - isOpen:${firstHour.isOpen} - open:"${firstHour.open}" - close:"${firstHour.close}"`);
-      }
-    });
-    
+    const foodTrucks = await fetchAllFoodTrucks();
     res.status(200).json(foodTrucks);
   } catch (error) {
     console.error('Error fetching food trucks:', error);
     res.status(500).json({ message: 'Error fetching food trucks' });
+  }
+};
+
+// GET food trucks here today
+const getFoodTrucksHereToday = async (req, res) => {
+  try {
+    const foodTrucks = await fetchAllFoodTrucks();
+    const hereToday = foodTrucks.filter(truck => truck.hereToday === true);
+    
+    res.status(200).json(hereToday);
+  } catch (error) {
+    console.error('Error fetching food trucks here today:', error);
+    res.status(500).json({ message: 'Error fetching food trucks here today' });
   }
 };
 
@@ -43,5 +49,6 @@ const getFoodTruckById = async (req, res) => {
 
 module.exports = { 
   getFoodTrucks,
+  getFoodTrucksHereToday,
   getFoodTruckById 
 };

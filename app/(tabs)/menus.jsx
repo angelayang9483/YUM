@@ -13,6 +13,7 @@ export default function Tab() {
   const url = config.BASE_URL;
   const router = useRouter();
   const [diningHalls, setDiningHalls] = useState([]);
+  const [openFoodTrucks, setOpenFoodTrucks] = useState([]);
   const [openDiningHalls, setOpenDiningHalls] = useState([]);
   const [closedDiningHalls, setClosedDiningHalls] = useState([]);
   const [mealPeriod, setMealPeriod] = useState('none');
@@ -110,7 +111,7 @@ export default function Tab() {
     }
   }
   
-  // get the dining halls
+  // get the dining halls and food trucks
   useEffect(() => {
     const getDiningHalls = async () => {
       const response = await axios.get(`${url}/api/dininghalls`);
@@ -118,7 +119,14 @@ export default function Tab() {
       setDiningHalls(response.data);
     }
 
+    const getOpenFoodTrucks = async () => {
+      const response = await axios.get(`${url}/api/foodtrucks/here`);
+      console.log("Food truck data response: ", response.data);
+      setOpenFoodTrucks(response.data);
+    }
+
     getDiningHalls();
+    getOpenFoodTrucks();
   }, []);
 
   // rechecks meal period every 30 minutes
