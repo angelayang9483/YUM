@@ -1,48 +1,38 @@
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Comment from '../components/comment.jsx';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Line from '../components/line.jsx';
+import Meal from '../components/meal.jsx';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Tab() {
+  const [favorites, setFavorites] = useState([]);
   const url = config.BASE_URL;
   const router = useRouter();
-  const { user, setUser } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [popularMeals, setPopularMeals] = useState([]);
 
-  const [favorites, setFavorites] = useState([]);
-
-  const getUser = async () => {
+  const fetchPopularMeals = async () => {
     try {
-      console.log('Current user object:', user);
-      if (!user || !user.userId) {
-        throw new Error('User not properly authenticated');
-      }
-
-      console.log('Attempting to fetch user data from:', `${url}/api/users/${user.userId}`);
-      const response = await axios.get(`${url}/api/users/${user.userId}`);
-      console.log('User data response:', response.data);
-      setFavorites(response.data.favorites);
-    } catch (error) {
-      console.error("Error getting user:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-      setError(error.message);
-      // If there's an authentication error, redirect to signup
-      if (!user || !user.userId) {
-        router.replace('/signup');
-      }
+      const response = await axios.get(`${url}/api/meals/popular`);
+      setPopularMeals(response.data);
+      console.log('popular meals:', popularMeals);
+    } catch (err) {
+      console.error("Error fetching popular meals:", err.message);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPopularMeals();
+  }, []);
+
 
   return (
     <ScrollView style={styles.container}>
@@ -54,31 +44,27 @@ export default function Tab() {
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Open Now</Text>
+        <Text style={styles.heading}>Meals</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Dining Halls</Text>
-          <View style={styles.placeholderDiningHall}></View>
-          <View style={styles.placeholderDiningHall}></View>
-        </View>
-        <View style={styles.subsection}>
-          <Text style={styles.subheading}>Food Trucks</Text>
-          <View style={styles.placeholderDiningHall}></View>
-          <View style={styles.placeholderDiningHall}></View>
+          {
+          popularMeals.map(meal => (
+            <Meal
+              key={meal._id}
+              name={meal.name}
+              diningHall={meal.diningHall}
+              isLiked={true}
+              location={'favorites'}
+            />
+          ))
+          }
         </View>
       </View>
 
       <Line/>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Closed</Text>
+        <Text style={styles.heading}>Food Trucks</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Dining Halls</Text>
-          <View style={styles.placeholderDiningHall}></View>
-          <View style={styles.placeholderDiningHall}></View>
-        </View>
-        <View style={styles.subsection}>
-          <Text style={styles.subheading}>Food Trucks</Text>
-          <View style={styles.placeholderDiningHall}></View>
         </View>
       </View>
     </ScrollView>
@@ -115,12 +101,5 @@ const styles = StyleSheet.create({
   },
   padding: {
     paddingTop: 15
-  },
-  placeholderDiningHall: {
-    backgroundColor: '#467FB6',
-    width: '100%',
-    height: 60,
-    borderRadius: 10,
-    marginTop: 10
   }
 });
