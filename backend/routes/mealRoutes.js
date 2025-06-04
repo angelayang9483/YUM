@@ -5,6 +5,9 @@ const mealController = require('../controllers/mealController');
 // GET all meals
 router.get('/', mealController.getMeals);
 
+// GET popular meals
+router.get('/popular', mealController.getPopularMeals);
+
 // GET meal by ID
 router.get('/:id', mealController.getMealById);
 
@@ -16,8 +19,5 @@ router.get('/category', mealController.getMealsByCategory);
 
 // POST new meal
 router.post('/', mealController.createMeal);
-
-// GET popular meals
-router.get('/', mealController.getPopularMeals);
 
 module.exports = router;
