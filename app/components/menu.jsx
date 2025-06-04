@@ -204,6 +204,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                     diningHall={item.diningHall}
                     isLiked={favoriteMeals.includes(item._id)}
                     location={'menu'}
+                    favoritesCount={item.favoritesCount}
                   />
                 )}
               />
