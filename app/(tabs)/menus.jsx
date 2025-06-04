@@ -24,6 +24,7 @@ export default function Tab() {
   const [closedFoodTrucks, setClosedFoodTrucks] = useState([]);
 
   const [now, setNow] = useState(new Date());
+
   const [mealPeriod, setMealPeriod] = useState('none');
 
   const [searchValue, setSearchValue] = useState('');
@@ -251,10 +252,10 @@ export default function Tab() {
         minute: '2-digit',
       });
       let currentPeriod = 'none';
-      if (hours >= 7 && hours < 11) currentPeriod = 'Breakfast';
+      if (hours >= 0 && hours < 11) currentPeriod = 'Breakfast';
       else if (hours >= 11 && hours < 17) currentPeriod = 'Lunch';
       else if (hours >= 17 && hours < 22) currentPeriod = 'Dinner';
-      else if (hours >= 21 || hours < 7) currentPeriod = 'Extended Dinner';
+      else if (hours >= 21 || hours < 25) currentPeriod = 'Extended Dinner';
 
       setMealPeriod(currentPeriod);
     };
