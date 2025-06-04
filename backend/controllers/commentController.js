@@ -23,6 +23,30 @@ const createComment = async (req, res) => {
   }
 };
 
+const linkCommentToUser = async (req, res) => {
+  const { userId } = req.body;
+  const { commentId } = req.params;
+  console.log("LINKING COMMENT TO USER: ", userId, commentId);
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.comments.push(commentId);
+
+    await user.save();
+    await comment.save();
+  } catch (err) {
+    console.error("Could not add comment to user:", err);
+  }
+};
+
 // get one comment
 const getCommentById = async (req, res) => {
     try {

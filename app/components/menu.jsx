@@ -1,24 +1,27 @@
-// Menu.jsx
+import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    Modal,
-    PanResponder,
-    SectionList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Modal,
+  PanResponder,
+  Pressable,
+  SafeAreaView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import config from '../config';
 import { AuthContext } from '../context/AuthContext';
 import Meal from './meal.jsx';
 
 const { height } = Dimensions.get('window');
-const SNAP_POINT = height / 8;
+const SNAP_POINT = height * 0.1;
 
 const Menu = ({ visible, onClose, diningHallId }) => {
   const url = config.BASE_URL;
@@ -26,19 +29,43 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [comment, setComment] = useState('');
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
 
-    useEffect(() => {
-    if (!user) return;
-    
+  const fetchFavoriteMeals = (mealIdToUpdate, newCount) => {
+    if (mealIdToUpdate && typeof newCount !== 'undefined') {
+        setMenu(prevMenu => 
+          prevMenu.map(period => ({
+            ...period,
+            data: period.data.map(station => ({
+              ...station,
+              data: station.data.map(meal => 
+                meal._id === mealIdToUpdate 
+                  ? { ...meal, favoritesCount: newCount } 
+                  : meal
+              ),
+            })),
+          }))
+        );
+      }
+    if (!user) {
+      setFavoriteMeals([]);
+      return;
+    }
     axios
-        .get(`${url}/api/users/${user.userId}/favorite-meal`)
-        .then(res => setFavoriteMeals(res.data.favoriteMeals))
-        .catch(err => console.error(err));
+      .get(`${url}/api/users/${user.userId}/favorite-meal`)
+      .then(res => setFavoriteMeals(res.data.favoriteMeals || []))
+      .catch(err => {
+        console.error('Error fetching favorite meals:', err);
+        setFavoriteMeals([]);
+      });
+  };
 
-    }, [user]);
+  useEffect(() => {
+    fetchFavoriteMeals();
+  }, [user]);
 
   const translateY = useRef(new Animated.Value(height)).current;
   const pan = useRef(new Animated.Value(0)).current;
@@ -123,125 +150,179 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     }
   }, [visible]);
 
+  const handleAddComment = async () => {
+    if (comment.trim() === '') return;
+    try {
+      const response = await axios.post(`${url}/api/comments`, {
+        content: comment,
+        diningHallName: diningHallId,
+        userId: user.userId
+      });
+      const commentId = response.data.comment._id;
+      console.log("Response looks like this: ", response)
+      //console.log('Extracted commentId =', commentId);
+      if (!commentId) {
+        console.warn('commentId is undefined; aborting link step.');
+        return;
+      }
+      await axios.post(`${url}/api/comments/${commentId}/link`, {
+        userId: user.userId
+      });
+      console.log("Posted to comments")
+      setComment('');
+    } catch (err) {
+      if (err.response) {
+        console.log("Server responded with:", err.response.status, err.response.data);
+      } else {
+        console.error("Error adding comment:", err.message);
+      }
+    }
+  }
+
   return (
     <Modal visible={visible} animationType="none" transparent>
-        <View style={styles.backdrop} />
+      <View style={styles.backdrop} />
       <Animated.View
         style={[
           styles.container,
           { transform: [{ translateY: animTranslateY }] },
         ]}
       >
-        <View style={styles.header} {...panResponder.panHandlers}>
-          <View style={styles.grabber} />
-          <Text style={styles.title}>Menu</Text>
-        </View>
-
-        {loading && (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header} {...panResponder.panHandlers}>
+            <View style={styles.grabber} />
+            <Text style={styles.title}>Menu</Text>
           </View>
-        )}
-        {!loading && error && (
-          <View style={styles.center}>
-            <Text>{error}</Text>
-          </View>
-        )}
 
-        {!loading && !error && (
-          <View style={styles.content}>
-            <View style={styles.buttonsRow}>
-              {menu.map((p, idx) => (
-                <View key={p.title + idx} style={styles.buttonWrapper}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setSelectedPeriod(p)}
-                    style={[
-                      styles.segmentButton,
-                      p.title === selectedPeriod.title
-                        ? styles.segmentButtonSelected
-                        : styles.segmentButtonUnselected,
-                      idx > 0 && {
-                        borderLeftWidth: 1,
-                        borderLeftColor: '#d1d1d6',
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        p.title === selectedPeriod.title
-                          ? styles.segmentTextSelected
-                          : styles.segmentTextUnselected,
-                      ]}
-                    >
-                      {p.title.charAt(0).toUpperCase() + p.title.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-
-            {!selectedPeriod && (
+          <View style={styles.mainContent}>
+            {loading && (
               <View style={styles.center}>
-                <Text>Please select a meal period</Text>
+                <ActivityIndicator size="large" />
+              </View>
+            )}
+            {!loading && error && (
+              <View style={styles.center}>
+                <Text>{error}</Text>
               </View>
             )}
 
-            {selectedPeriod && (
-              <SectionList
-              showsVerticalScrollIndicator={false}
-                sections={selectedPeriod.data}
-                keyExtractor={(item, idx) => item._id + idx}
-                renderSectionHeader={({ section }) => (
-                  <Text style={styles.sectionHeader}>{section.title}</Text>
+            {!loading && !error && (
+              <View style={styles.content}>
+                <View style={styles.buttonsRow}>
+                  {menu.map((p, idx) => (
+                    <View key={p.title + idx} style={styles.buttonWrapper}>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setSelectedPeriod(p)}
+                        style={[
+                          styles.segmentButton,
+                          p.title === selectedPeriod.title
+                            ? styles.segmentButtonSelected
+                            : styles.segmentButtonUnselected,
+                          idx > 0 && {
+                            borderLeftWidth: 1,
+                            borderLeftColor: '#d1d1d6',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.segmentText,
+                            p.title === selectedPeriod.title
+                              ? styles.segmentTextSelected
+                              : styles.segmentTextUnselected,
+                          ]}
+                        >
+                          {p.title.charAt(0).toUpperCase() + p.title.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+
+                {!selectedPeriod && (
+                  <View style={styles.center}>
+                    <Text>Please select a meal period</Text>
+                  </View>
                 )}
-                renderItem={({ item, idx }) => (
-                  <Meal
-                    key={item._id + idx}
-                    id={item._id}
-                    name={item.name}
-                    diningHall={item.diningHall}
-                    isLiked={favoriteMeals.includes(item._id)}
-                    location={'menu'}
-                    favoritesCount={item.favoritesCount}
-                  />
+
+                {selectedPeriod && (
+                  <View style={styles.listContainer}>
+                    <SectionList
+                      showsVerticalScrollIndicator={false}
+                      sections={selectedPeriod.data}
+                      keyExtractor={(item, idx) => item._id + idx}
+                      renderSectionHeader={({ section }) => (
+                        <Text style={styles.sectionHeader}>{section.title}</Text>
+                      )}
+                      renderItem={({ item, idx }) => (
+                        <Meal
+                          key={item._id + idx}
+                          id={item._id}
+                          name={item.name}
+                          diningHall={item.diningHall}
+                          isLiked={favoriteMeals.includes(item._id)}
+                          location={'menu'}
+                          favoritesCount={item.favoritesCount}
+                          onLikeChange={fetchFavoriteMeals}
+                        />
+                      )}
+                      contentContainerStyle={styles.sectionListContent}
+                    />
+                  </View>
                 )}
-              />
+              </View>
             )}
           </View>
-        )}
+
+          <View style={styles.commentContainer}>
+            <TextInput 
+              style={styles.commentText}
+              placeholder="Write a comment..."
+              value={comment}
+              onChangeText={setComment}
+            />
+            <Pressable onPress={handleAddComment} style={styles.sendButton}>
+              <FontAwesome name="paper-plane" size={20} color="black" />
+            </Pressable>   
+          </View>
+        </SafeAreaView>
       </Animated.View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-    backdrop: {
-        position:  'absolute',
-        top:       0,
-        left:      0,
-        right:     0,
-        bottom:    0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-
-    },
-
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  mainContent: {
+    flex: 1,
+    paddingBottom: 60,
+  },
   container: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: height,
+    height: '90%',
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 12,
-    paddingHorizontal: 16,
     zIndex: 1000,
   },
   header: {
     alignItems: 'center',
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   grabber: {
     width: 40,
@@ -262,6 +343,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -304,6 +386,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f6f6',
     paddingVertical: 8,
     paddingHorizontal: 8,
+  },
+  listContainer: {
+    flex: 1,
+  },
+  sectionListContent: {
+    paddingBottom: 20,
+  },
+  commentContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  commentText: {
+    flex: 1,
+    marginRight: 10,
+    padding: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    maxHeight: 100,
+  },
+  sendButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });
 
