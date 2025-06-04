@@ -354,7 +354,7 @@ export default function Tab() {
     return (
       <View>
         <Text style={styles.subheading}>DINING HALLS</Text>
-        {section.title === 'Open Now' ? openDiningHalls.map((hall) => (
+        {section.title === 'open now' ? openDiningHalls.map((hall) => (
           <View key={hall._id}>
             <DiningHall
               style={styles.diningHall}
@@ -376,7 +376,7 @@ export default function Tab() {
           </View>
         ))}
         <Text style={styles.subheading}>FOOD TRUCKS</Text>
-        {section.title === 'Open Now' ? openFoodTrucks.map((truck) => (
+        {section.title === 'open now' ? openFoodTrucks.map((truck) => (
           <View key={truck._id}>
             <FoodTruck 
               key={truck._id} 
