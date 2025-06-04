@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
+import React, { useContext, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import config from '../config';
+import { AuthContext } from '../context/AuthContext';
 
 const Meal = (props) => {
+    const url = config.BASE_URL;
+    const { user } = useContext(AuthContext);
     const [isLiked, setLiked] = useState(props.isLiked);
-    const [likes, setLikes] = useState(props.likes);
+    const [favoritesCount, setFavoritesCount] = useState(props.favoritesCount);
 
-    const handleLike = async () => {   
+    const handleLike = async () => {  
         try {
-            // send to database 
+            if (isLiked) {
+                await axios.delete(`${url}/api/users/${user.userId}/favorite-meal`, {
+                    data: { mealId: props.id } 
+                });
+                setFavoritesCount(favoritesCount - 1);
+            } else {
+                await axios.post(`${url}/api/users/${user.userId}/favorite-meal`, 
+                    { mealId: props.id }
+                );
+                setFavoritesCount(favoritesCount + 1);
+            }
             setLiked(!isLiked);
         } catch (error) {
-            console.error('Error liking meal:', error);
+            console.error('Error toggling favorite meal:', error);
         }
     };
 
@@ -32,6 +47,7 @@ const Meal = (props) => {
                     color="white" 
                 />
             </Pressable>
+            <Text style={styles.favoritesCount}>{favoritesCount}</Text>
         </View>
     );
 };
@@ -89,5 +105,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexShrink: 0,
         minWidth: 30,
+    },
+    favoritesCount: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '500',
     }
 });

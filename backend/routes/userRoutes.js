@@ -21,9 +21,21 @@ router.post('/login', userController.checkUsernameAndPassword);
 // router.post('/:userId/like-comment', userController.likeComment);
 
 //get comments that have been liked by a user
-router.get('/:userId/liked-comments', userController.getLikedComments);
+router.get('/:id/liked-comments', userController.getLikedComments);
 
 // GET comments user has made
-router.get('/:userId/comments', userController.getComments);
+router.get('/:id/comments', userController.getComments);
+
+// favorite a meal
+router.post('/:id/favorite-meal', userController.favoriteMeal);
+
+// unfavorite a meal
+router.delete('/:id/favorite-meal', userController.unfavoriteMeal);
+
+// get favorite meals
+router.get('/:id/favorite-meal', userController.getFavoriteMeals)
+
+// GET favorite trucks
+router.get('/:userId/favorite-trucks', userController.getFavoriteFoodTrucks);
 
 module.exports = router;
