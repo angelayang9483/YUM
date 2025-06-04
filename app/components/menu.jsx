@@ -34,7 +34,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     if (!user) return;
     
     axios
-        .get(`${url}/api/users/${user.userId}/favorite-meal`)
+        .get(`${url}/api/users/${user.userId}/favorite-meals`)
         .then(res => setFavoriteMeals(res.data.favoriteMeals))
         .catch(err => console.error(err));
 

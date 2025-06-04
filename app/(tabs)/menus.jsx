@@ -371,9 +371,9 @@ export default function Tab() {
             <FoodTruck 
               key={truck._id} 
               truck={truck} 
-              onMenu={true}
               isOpen={true}
               closeTime={getClosingTruckTime(truck)}
+              location={'menus'}
             />
           </View>
         )) : closedFoodTrucks.map((truck) => (
@@ -381,9 +381,9 @@ export default function Tab() {
             <FoodTruck 
               key={truck._id} 
               truck={truck} 
-              onMenu={true}
               isOpen={false}
               nextOpenTime={getNextOpenTruckTime(truck)}
+              location={'menus'}
             />
           </View>
         ))}

@@ -8,16 +8,18 @@ import axios from 'axios';
 
 const FoodTruck = ({
   truck,
-  onMenu,
   isOpen = false,
   closeTime = "N/A",
-  nextOpenTime = "Unavailable"
+  nextOpenTime = "Unavailable",
+  location,
+  isFavorited=false
 }) => {
-  const [isFavorited, setFavorited] = useState( false );
-  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const url = config.BASE_URL;
   const { user } = useContext(AuthContext);
+
+  const [favorited, setFavorited] = useState( isFavorited );
+  const [favoriteCount, setFavoriteCount] = useState(truck.favoriteCount || 0);
 
   const getFoodTruck = async () => {
     try {
@@ -29,17 +31,19 @@ const FoodTruck = ({
   };
 
   useEffect(() => {
-    if (user && Array.isArray(user.favoriteFoodTrucks)) {
+    if (location === 'favorites') {
+      setFavorited(true);
+    } else if (user && Array.isArray(user.favoriteFoodTrucks)) {
       setFavorited(user.favoriteFoodTrucks.includes(truck._id));
     }
     getFoodTruck();
-  }, [user, truck._id]);
+  }, [user?.favoriteFoodTrucks, truck._id, location]);
 
 
 const handleFav = async () => {
   if (!user) return;
 
-  const wasFavorited = isFavorited;
+  const wasFavorited = favorited;
   const updatedCount = wasFavorited ? favoriteCount - 1 : favoriteCount + 1;
 
   try {
@@ -59,13 +63,13 @@ const handleFav = async () => {
       <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
         {truck.name}
       </Text>
-      { onMenu? 
+      { location === 'menus'? 
         <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>:
         <View/>
       }
       <Pressable onPress={handleFav} style={styles.heartContainer}>
         <FontAwesome 
-          name={isFavorited ? "heart" : "heart-o"} 
+          name={favorited ? "heart" : "heart-o"}
           size={20} 
           color="white" 
         />
