@@ -126,7 +126,7 @@ export default function Tab() {
       {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>meals</Text>
+        <Text style={styles.heading}>Meals</Text>
         <View style={styles.subsection}>
           {
           popularMeals.map((meal, _idx) => (
@@ -147,7 +147,7 @@ export default function Tab() {
       {/* <Line/> */}
 
       <View style={styles.section}>
-        <Text style={styles.heading}>food trucks</Text>
+        <Text style={styles.heading}>Food Trucks</Text>
         <View style={styles.subsection}>
           {
           popularFoodTrucks.map((foodTruck, _idx) => (
