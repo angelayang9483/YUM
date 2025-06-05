@@ -395,6 +395,12 @@ class WebScrapeController {
         '5:00 p.m. – 8:30 p.m.',
         '9 p.m. – 12 a.m.'
       ];
+
+      await FoodTruckModel.updateMany({}, { $set: {
+         hereToday: false,
+         hours: [],
+         dailyLocation: ""
+        } });
       
       // Get today's date for comparison
       const today = new Date();
@@ -443,54 +449,53 @@ class WebScrapeController {
           const isToday = dateCell.toLowerCase().includes(todayFormatted.toLowerCase().substring(0, 3)) && // Match day of week
                          dateCell.toLowerCase().includes(todayFormatted.toLowerCase().split(' ')[2]); // Match day number
           
-          // Process the two time slot cells
-          for (let timeSlotIndex = 0; timeSlotIndex < 2; timeSlotIndex++) {
-            const cellIndex = timeSlotIndex + 1; // Skip date column
-            const cell = $(cells[cellIndex]);
-            const timeSlot = timeSlots[timeSlotIndex];
-            
-            if (!cell.length) continue;
-            
-            // Extract food truck names from the cell
-            const cellHtml = cell.html() || '';
-            const cellText = cell.text().trim();
-            
-            // Skip empty cells
-            if (!cellText) continue;
-            
-            let truckNames = [];
-            
-            if (cellHtml.includes('<br>')) {
-              // Multiple trucks separated by <br>
-              const parts = cellHtml.split('<br>');
-              parts.forEach(part => {
-                const truckName = $('<div>').html(part).text().trim();
-                if (truckName) {
-                  truckNames.push(truckName);
+          if(isToday) {
+            for(let timeSlotIndex = 0; timeSlotIndex < 2; timeSlotIndex++) {
+              const cellIndex = timeSlotIndex + 1; // Skip date column
+              const cell = $(cells[cellIndex]);
+              const timeSlot = timeSlots[timeSlotIndex];
+              
+              if (!cell.length) continue;
+              
+              const cellHtml = cell.html() || '';
+              const cellText = cell.text().trim();
+              
+              if (!cellText) continue;
+              
+              let truckNames = [];
+              
+              if (cellHtml.includes('<br>')) {
+                // Multiple trucks separated by <br>
+                const parts = cellHtml.split('<br>');
+                parts.forEach(part => {
+                  const truckName = $('<div>').html(part).text().trim();
+                  if (truckName) {
+                    truckNames.push(truckName);
+                  }
+                });
+              } else {
+                // Single truck
+                if (cellText) {
+                  truckNames.push(cellText);
+                }
+              }
+              
+              // Add each truck to our data with case-insensitive duplicate detection
+              truckNames.forEach(truckName => {
+                const lowerCaseName = truckName.toLowerCase();
+                if (truckName && !foodTrucksSet.has(lowerCaseName)) {
+                  foodTrucksSet.add(lowerCaseName);
+                  
+                  locationData[location].push({
+                    name: truckName, // Keep original capitalization
+                    location: location,
+                    timeSlot: timeSlot,
+                    date: dateCell,
+                    hereToday: true,
+                  });
                 }
               });
-            } else {
-              // Single truck
-              if (cellText) {
-                truckNames.push(cellText);
-              }
             }
-            
-            // Add each truck to our data with case-insensitive duplicate detection
-            truckNames.forEach(truckName => {
-              const lowerCaseName = truckName.toLowerCase();
-              if (truckName && !foodTrucksSet.has(lowerCaseName)) {
-                foodTrucksSet.add(lowerCaseName);
-                
-                locationData[location].push({
-                  name: truckName, // Keep original capitalization
-                  location: location,
-                  timeSlot: timeSlot,
-                  date: dateCell,
-                  hereToday: isToday
-                });
-              }
-            });
           }
         });
       });
