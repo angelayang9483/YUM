@@ -284,18 +284,18 @@ const Menu = ({ visible, onClose, diningHallId }) => {
           </View>
 
           <View style={styles.mainContent}>
-            {loading && (
+            {loading ? (
               <View style={styles.center}>
                 <ActivityIndicator size="large" />
               </View>
-            )}
-            {!loading && error && (
+            ) : null}
+            {(!loading && error) ? (
               <View style={styles.center}>
                 <Text>{error}</Text>
               </View>
-            )}
+            ) : null}
 
-            {!loading && !error && (
+            {(!loading && !error) ? (
               <View style={styles.content}>
                 <View style={styles.buttonsRow}>
                   {menu.map((p, idx) => (
@@ -308,10 +308,10 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           p.title === selectedPeriod.title
                             ? styles.segmentButtonSelected
                             : styles.segmentButtonUnselected,
-                          idx > 0 && {
+                          idx > 0 ? {
                             borderLeftWidth: 1,
                             borderLeftColor: '#d1d1d6',
-                          },
+                          } : null,
                         ]}
                       >
                         <Text
@@ -329,13 +329,13 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                   ))}
                 </View>
 
-                {!selectedPeriod && (
+                {!selectedPeriod ? (
                   <View style={styles.center}>
                     <Text>Please select a meal period</Text>
                   </View>
-                )}
+                ) : null}
 
-                {selectedPeriod && (
+                {selectedPeriod ? (
                   <View style={styles.listContainer}>
                     <ScrollView
                       showsVerticalScrollIndicator={false}
@@ -353,7 +353,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                           isFavorited={favoriteMeals.some(a => a._id === item._id)}
                           location={'menu'}
                           favoritesCount={item.favoritesCount}
-                          onLikeChange={fetchFavoriteMeals}
                         />
                       )}
                       contentContainerStyle={styles.sectionListContent}
@@ -370,7 +369,6 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                               isFavorited={favoriteMeals.some(a => a._id === item._id)}
                               location={'menu'}
                               favoritesCount={item.favoritesCount}
-                              onLikeChange={fetchFavoriteMeals}
                             />
                           ))}
                         </View>
@@ -387,15 +385,15 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                             liked={likedComments.some(c => c._id === comment._id)}
                           />
                         ))}
-                        {(!diningHall?.comments || diningHall.comments.length === 0) && (
+                        {(!diningHall?.comments || diningHall.comments.length === 0) ? (
                           <Text style={styles.noCommentsText}>No comments yet</Text>
-                        )}
+                        ) : null}
                       </View>
                     </ScrollView>
                   </View>
-                )}
+                ) : null}
               </View>
-            )}
+            ) : null}
           </View>
 
           <View style={styles.commentContainer}>
