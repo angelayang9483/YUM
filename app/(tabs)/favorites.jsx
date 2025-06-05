@@ -115,7 +115,7 @@ export default function Tab() {
       <View style={styles.section}>
         <Text style={styles.heading}>Here Today</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Meals</Text>
+          <Text style={styles.subheading}>MEALS</Text>
           {
             hereTodayMeals.map((meal, _idx) => (
               <Meal
@@ -131,7 +131,7 @@ export default function Tab() {
           }
         </View>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Food Trucks</Text>
+          <Text style={styles.subheading}>FOOD TRUCKS</Text>
           {
             hereTodayFoodTrucks.map((truck, _idx) => (
               <FoodTruck
@@ -153,7 +153,7 @@ export default function Tab() {
       <View style={styles.section}>
         <Text style={styles.heading}>Not Here Today</Text>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Meals</Text>
+          <Text style={styles.subheading}>MEALS</Text>
           {
             notHereTodayMeals.map((meal, _idx) => (
               <Meal
@@ -169,7 +169,7 @@ export default function Tab() {
           }
         </View>
         <View style={styles.subsection}>
-          <Text style={styles.subheading}>Food Trucks</Text>
+          <Text style={styles.subheading}>FOOD TRUCKS</Text>
           {
             notHereTodayFoodTrucks.map((truck, _idx) => (
               <FoodTruck
@@ -205,19 +205,18 @@ const styles = StyleSheet.create({
     color: 'rgba(30, 55, 101, 1)',
     fontFamily: 'perpetua-bold-italic'
   },
-  heading: {
-    fontWeight: '700',
-    fontSize: 30,
-    fontFamily: 'perpetua-bold'
-  },
-  subheading: {
-    width: '100%',
-    fontSize: 23,
-    color: 'rgba(30, 55, 101, 1)',
-    fontFamily: 'Gill-Sans',
-    fontWeight: '600',
-    marginTop: 5,
-  },
+  heading: {
+      fontWeight: '500',
+      fontSize: 25,
+      fontFamily: 'Gill-Sans'
+    },
+  subheading: {
+      width: '100%',
+      fontSize: 25,
+      color: 'rgba(30, 55, 101, 1)',
+      fontFamily: 'Perpetua-MT-Regular',
+      marginTop: 5,
+    },
   padding: {
     paddingTop: 40
   }

@@ -257,7 +257,7 @@ export default function Tab() {
     return (
       <View>
         <Text style={styles.subheading}>DINING HALLS</Text>
-        {section.title === 'open now' ? openDiningHalls.map((hall, _idx) => (
+        {section.title === 'Open Now' ? openDiningHalls.map((hall, _idx) => (
             <DiningHall
               key={hall._id + _idx}
               style={styles.diningHall}
@@ -277,10 +277,10 @@ export default function Tab() {
             />
         ))}
         <Text style={styles.subheading}>FOOD TRUCKS</Text>
-        {section.title === 'open now' ? openFoodTrucks.map((truck, _idx) => (
+        {section.title === 'Open Now' ? openFoodTrucks.map((truck, _idx) => (
             <FoodTruck 
               key={truck._id + _idx}
-               isFavorited={favoriteFoodTrucks.some(ft => ft._id === truck._id)}
+              isFavorited={favoriteFoodTrucks.some(ft => ft._id === truck._id)}
               truck={truck} 
               isOpen={true}
               closeTime={getClosingTruckTime(truck, now)}
@@ -295,8 +295,7 @@ export default function Tab() {
               nextOpenTime={getNextOpenTruckTime(truck, now)}
               location={'menus'}
             />
-))}
-
+          ))}
       </View>
      );
    };
@@ -314,7 +313,7 @@ export default function Tab() {
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1 }}>
         <View style={styles.section}>
-          <Text style={styles.title}>menus</Text>
+          <Text style={styles.title}>MENUS</Text>
           <SearchBar
             placeholder="search for a dining hall or truck..."
             onChangeText={searchFunc}
@@ -334,11 +333,11 @@ export default function Tab() {
             }
           ] : [
             {
-              title: 'open now',
+              title: 'Open Now',
               data: [{ id: 'open' }]
             },
             {
-              title: 'closed',
+              title: 'Closed',
               data: [{ id: 'closed' }]
             }
           ]}

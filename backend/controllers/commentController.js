@@ -12,19 +12,23 @@ const createComment = async (req, res) => {
       return res.status(404).json({ error: "Dining hall not found" });
     }
 
-    const comment = new Comment({
+    const newComment = new Comment({
       content,
       diningHall: diningHallId,
       user: userId
     });
 
-    const savedComment = await comment.save();
+    // This is the correct way - atomic operation
+    await User.findByIdAndUpdate(userId, { $inc: { karma: 1 } });
+    
+    const savedComment = await newComment.save();
     res.status(201).json({ success: true, comment: savedComment });
   } catch (error) {
     console.error("Error creating comment:", error);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 // get one comment
 const getCommentById = async (req, res) => {
