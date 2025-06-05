@@ -35,13 +35,13 @@ const DiningHall = (props) => {
             </View>
             </Pressable>
 
-            {menuVisible && (
+            {menuVisible ? (
             <Menu
                 visible={menuVisible}
                 onClose={() => setMenuVisible(false)}
                 diningHallId={props.id}
             />
-            )}
+            ) : null}
         </View>
     );
 };

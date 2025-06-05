@@ -59,14 +59,14 @@ const FoodTruck = ({
     <View style={location === 'menus' ? styles.menusContainer : styles.otherContainer}>
       <View style={styles.nameTimeContainer}>
         <Text style={styles.name}>{truck.name}</Text>
-        {truck.hereToday && (
+        {truck.hereToday ? (
           <Text style={styles.time}>{isOpen ? 'Closes' : 'Opens'} at {isOpen ? closeTime : nextOpenTime}</Text>
-        )}
+        ) : null}
       </View>
       <Pressable onPress={handleFavorite} style={styles.heartContainer}>
-        {location == 'popular' && (
+        {location == 'popular' ? (
             <Text style={styles.likeCount}>{truck.favoritesCount}</Text>
-        )}
+        ) : null}
         <FontAwesome 
           name={isFavorited ? "heart" : "heart-o"}
           size={20} 

@@ -28,9 +28,7 @@ const Meal = (props) => {
                     data: { mealId: props.id } 
                 });
                 if (response && response.data && response.data.success && response.data.meal) {
-                    if (props.onLikeChange) {
-                        props.onLikeChange(response.data.meal, false);
-                    }
+                    emit('unfavorited-meal', response.data.meal);
                     console.log("Emitted unfavorited meal:", response.data.meal)
                 }
             } else {
@@ -39,9 +37,7 @@ const Meal = (props) => {
                     { mealId: props.id }
                 );
                 if (response && response.data && response.data.success && response.data.meal) {
-                    if (props.onLikeChange) {
-                        props.onLikeChange(response.data.meal, true);
-                    }
+                    emit('favorite-meal', response.data.meal);
                     console.log("Emitted favorite meal:", response.data.meal)
                 }
             }
@@ -58,13 +54,13 @@ const Meal = (props) => {
         <View style={isMenu ? styles.menusContainer : styles.favoritesContainer}>
             <View style={styles.textContainer}>
                 <Text style={isMenu ? styles.menusItem : styles.favoritesItem}>{props.name}</Text>
-                {!isMenu && (
+                {!isMenu ? (
                     <Text style={styles.diningHall}>{props.diningHall}</Text>
-                )}
+                ) : null}
             </View>
-            {isPopular && (
+            {isPopular ? (
                 <Text style={styles.favoritesCount}>{props.favoritesCount}</Text>
-            )}
+            ) : null}
             <Pressable onPress={handleFavorite} style={styles.heartContainer}>
                 <FontAwesome
                     name={props.isFavorited ? "heart" : "heart-o"} 
@@ -97,7 +93,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginTop: 5,
         paddingHorizontal: 15,
-        height: 50, // thinner height
+        height: 50,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

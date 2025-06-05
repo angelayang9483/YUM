@@ -1,4 +1,4 @@
 const config = {
-  BASE_URL: 'https://8935-2607-f010-2a7-103f-6909-2237-370-8719.ngrok-free.app'
+  BASE_URL: 'http://localhost:4000'
 }
 export default config
