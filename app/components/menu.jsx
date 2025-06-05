@@ -83,11 +83,11 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     }
   };
 
-  useEffect( async () => {
+  useEffect(() => {
     const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, null, "MENU.JSX");
 
-    const likedCommentsResponse = await axios.get(`${url}/api/users/${user.userId}/liked-comments`);
-    setLikedComments(likedCommentsResponse.data.likedComments || []);
+    const likedCommentsResponse = Promise.resolve(axios.get(`${url}/api/users/${user.userId}/liked-comments`));
+    likedCommentsResponse.then(res => setLikedComments(res.data.likedComments || []));
 
     return () => {
       cleanup();
