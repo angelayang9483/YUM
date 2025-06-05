@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { useState, useEffect } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
-import config from '../config';
 import { useFonts } from 'expo-font';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import config from '../config';
 
 const Comment = ({ comment, onLike, liked }) => {
   const [isLiked, setLiked] = useState(liked || false);
@@ -42,6 +42,10 @@ const Comment = ({ comment, onLike, liked }) => {
   }, [comment.diningHall]);
 
   const handleLikePress = () => {
+    // optimistically update the UI immediately
+    setLiked(!isLiked);
+    
+    // call the parent's onLike function
     if (onLike) onLike(comment._id);
   };
 

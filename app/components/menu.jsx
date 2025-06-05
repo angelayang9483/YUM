@@ -34,6 +34,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
   const [error, setError] = useState(null);
   const [comment, setComment] = useState('');
   const [diningHall, setDiningHall] = useState(null);
+  const [likedComments, setLikedComments] = useState([]);
 
   const { user } = useContext(AuthContext);
   const [favoriteMeals, setFavoriteMeals] = useState([]);
@@ -82,8 +83,12 @@ const Menu = ({ visible, onClose, diningHallId }) => {
     }
   };
 
-  useEffect(() => {
+  useEffect( async () => {
     const cleanup = initializeMealAndTruckListeners(fetchFavoriteMeals, null, "MENU.JSX");
+
+    const likedCommentsResponse = await axios.get(`${url}/api/users/${user.userId}/liked-comments`);
+    setLikedComments(likedCommentsResponse.data.likedComments || []);
+
     return () => {
       cleanup();
     };
@@ -239,18 +244,28 @@ const Menu = ({ visible, onClose, diningHallId }) => {
 
   const handleCommentLike = async (commentId) => {
     try {
-      await axios.post(`${url}/api/comments/${commentId}/like`, {
+      const response = await axios.post(`${url}/api/comments/${commentId}/like`, {
         userId: user.userId
       });
       
-      // Just refresh the dining hall data to show updated likes count
+      // update the likedComments state based on the response
+      // assuming the API returns whether the comment was liked or unliked
+      if (response.data.liked) {
+        // Comment was liked - add to likedComments
+        setLikedComments(prev => [...prev, { _id: commentId }]);
+      } else {
+        // comment was unliked - remove from likedComments
+        setLikedComments(prev => prev.filter(c => c._id !== commentId));
+      }
+      
+      // refresh the dining hall data to show updated likes count
       const diningResponse = await axios.get(`${url}/api/diningHalls/${diningHallId}`);
       setDiningHall(diningResponse.data);
     } catch (err) {
       console.error('Error liking comment:', err);
     }
   };
-
+  
   return (
     <Modal visible={visible} animationType="none" transparent>
       <View style={styles.backdrop} />
@@ -369,6 +384,7 @@ const Menu = ({ visible, onClose, diningHallId }) => {
                             key={comment._id || index}
                             comment={comment}
                             onLike={handleCommentLike}
+                            liked={likedComments.some(c => c._id === comment._id)}
                           />
                         ))}
                         {(!diningHall?.comments || diningHall.comments.length === 0) && (
