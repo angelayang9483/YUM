@@ -2,7 +2,9 @@
 YUM was designed with the intent to provide an enhanced browsing experience for users. The app boasts 4 main features: a profile page for users to store their data, a daily menu page for dining halls, a favorites section for meals and food trucks, and a profile page for uses to keep track of their activity. 
 
 # Features
-- Profile: All users are prompted to create a profile to store their preferences and activities.
+- Login/Signin: Users can create profiles or sign in to their existing profiles.
+  
+- Profile: All users have a profile to store their activity and karma.
 - Menu: The menu page showcases accurate and detailed menus for each dining hall, which helps educate users in their choices and increases satisfaction with their meals.
 - Favorites: Users can like meals and check the favorites page to see which of their liked meals are being served on that day. 
 - Popular: The trending list is updated daily with the community's favorite meals, acting as inspiration for indecisive users looking for a good meal.
@@ -24,26 +26,23 @@ YUM was designed with the intent to provide an enhanced browsing experience for 
    https://ngrok.com/downloads/mac-os?tab=download
    
    ```bash
-   ngrok http PORT
+   ngrok http 4000
    ```
-3. Start the app
+   In the app/config.js file, replace the link with the ngrok link.
+3. Start the server
+
+   ```bash
+   cd backend
+   npx nodemon start
+   ```
+4. Start the app
 
    ```bash
    npx expo start
    ```
    
 > Why ngrok?
-When developing a mobile application locally, the device or simulator needs a publicly accessible URL to reach your backend server. By default, Express runs on localhost (e.g., http://localhost:PORT), which is only reachable from your machine. ngrok creates a secure tunnel from an external, internet-accessible URL to your local server. This allows:
-
-Real Device Testing: Mobile devices on the same network (or anywhere) can fetch data from your local Express API without requiring you to deploy to a remote host.
-
-Webhook Integration: If you integrate third-party services (e.g., authentication, real-time updates) that send webhooks, they need a public endpoint. ngrok provides one automatically.
-
-Collaborative Debugging: Teammates or testers can access the current version of your backend via ngrok’s shared URL, which is especially useful for remote development.
-
-Consistent Endpoint: Each ngrok session creates a stable, easy-to-share link that points to the running server instance, making it simpler to demo features without modifying client code.
-
-Simply start ngrok with ngrok http PORT, then replace any localhost:PORT references in your React Native code or environment files with the forwarded ngrok URL displayed in the terminal.
+When developing a mobile application locally, the device or simulator needs a publicly accessible URL to reach your backend server. By default, Express runs on localhost (e.g., http://localhost:PORT), which is only reachable from your machine. ngrok creates a secure tunnel from an external, internet-accessible URL to your local server. Start ngrok with ngrok http PORT, then replace any localhost:PORT references in your React Native code or environment files with the forwarded ngrok URL displayed in the terminal.
 
 In the output, you'll find options to open the app in a
 
