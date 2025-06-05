@@ -299,7 +299,7 @@ const initializeMealAndTruckListeners = (fetchFavoriteMeals, fetchFavoriteFoodTr
 
 
 export {
-    getClosingTime, getClosingTruckTime, getDiningHalls,
-    getFoodTrucks, getNextOpenTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isDiningHallOpen, isFoodTruckOpen
+  getClosingTime, getClosingTruckTime, getDiningHalls,
+  getFoodTrucks, getNextOpenTime, getNextOpenTruckTime, initializeMealAndTruckListeners, isDiningHallOpen, isFoodTruckOpen
 };
 
