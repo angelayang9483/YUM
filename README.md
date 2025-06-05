@@ -21,30 +21,30 @@ YUM was designed with the intent to provide an enhanced browsing experience for 
    ```bash
    npm install
    ```
-2. Set up ngrok
+2. Set up ngrok (if you are not on private WiFi)
    Follow the instructions in the link below:
    https://ngrok.com/downloads/mac-os?tab=download
    
    ```bash
    ngrok http 4000
    ```
-   In the app/config.js file, replace the link with the ngrok link.
-3. Start the server
+   In the app/config.js file, replace the link with the ngrok link that pops up after running the command.
+4. Start the server
 
    ```bash
    cd backend
    npx nodemon start
    ```
-4. Start the app
+5. Start the app
 
    ```bash
    npx expo start
    ```
    
 > Why ngrok?
-When developing a mobile application locally, the device or simulator needs a publicly accessible URL to reach your backend server. By default, Express runs on localhost (e.g., http://localhost:PORT), which is only reachable from your machine. ngrok creates a secure tunnel from an external, internet-accessible URL to your local server. Start ngrok with ngrok http PORT, then replace any localhost:PORT references in your React Native code or environment files with the forwarded ngrok URL displayed in the terminal.
+When developing a mobile application locally, the device or simulator needs a publicly accessible URL to reach your backend server. By default, Express runs on localhost (e.g., http://localhost:PORT), which is only reachable from your machine. ngrok creates a secure tunnel from an external, internet-accessible URL to your local server. Start ngrok with ngrok http PORT, then replace any localhost:PORT references in your React Native code or environment files with the forwarded ngrok URL displayed in the terminal. We used ngrok because we live on campus and had to use eduroam.
 
-In the output, you'll find options to open the app in a
+In the output after npx expo start, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
